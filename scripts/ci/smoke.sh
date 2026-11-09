@@ -14,7 +14,10 @@ check() {
 		if [[ "$status" != "200" ]]; then echo "  $p -> $status"; return 1; fi
 	done
 	if [[ -n "$expect_build" ]]; then
-		if ! curl -fsS "$base/" | grep -q "name=\"x-build\" content=\"$expect_build\""; then
+		# Fetch first: `curl | grep -q` fails under pipefail when grep exits on the first match.
+		local home
+		home="$(curl -fsS "$base/")" || { echo "  / could not be fetched"; return 1; }
+		if ! grep -q "name=\"x-build\" content=\"$expect_build\"" <<<"$home"; then
 			echo "  / does not serve build $expect_build yet"; return 1
 		fi
 	fi
