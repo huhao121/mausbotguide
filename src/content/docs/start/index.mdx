@@ -1,0 +1,78 @@
+---
+title: Your first working bot in 15 minutes
+description: Install OpenMausBot on a Mac, use the Claude or Codex login you already have, and go from a first message to a first scheduled routine, with a visible result at every step.
+verifiedOn: 0.1.146
+sidebar:
+  order: 1
+  label: Quickstart
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Figure from '../../../components/Figure.astro';
+
+In this tutorial we install OpenMausBot on a Mac, get a bot to answer, then give it a real job: **tomorrow at 9 a.m., summarize the top 5 Hacker News stories and send them to you.**
+
+You need a Mac and a Claude (Pro or Max) or ChatGPT subscription. It is quickest if Claude Code or Codex is already signed in on this Mac.
+
+<Steps>
+
+1. **Install the app**
+
+   Download the `.dmg` for your chip from [GitHub Releases](https://github.com/milind-soni/OpenMausBot/releases/latest) and drag it into Applications. Or let your AI agent do it:
+
+   ```text title="Prompt"
+   Download the .dmg for this Mac's chip from the latest milind-soni/OpenMausBot GitHub release,
+   verify it is signed and notarized with spctl --assess, install it to /Applications and open it.
+   ```
+
+   You'll see a chat app with one contact on the left: **MausBot**.
+
+2. **Check it found your engine**
+
+   On first launch it asks you to connect an AI. Pick the Claude or Codex you already use: if it is signed in on this Mac it is reused. If not, you sign in on their own website. No new account needed.
+
+   {/* SCREENSHOT: first-launch screen for connecting an AI. src/assets/screenshots/start/engines.png */}
+
+3. **Say hello**
+
+   Click **MausBot** and send:
+
+   ```text
+   In one sentence: which model are you, and what can you do for me?
+   ```
+
+   A few seconds later it answers and names its model. The whole chain works: app → your local `claude` / `codex` process → model → back.
+
+4. **Give it a real job**
+
+   ```text
+   Every day at 9:00, open news.ycombinator.com, summarize the top 5 stories in one sentence each
+   with links, and send them to me. Run it once now so I can see it.
+   ```
+
+   It runs the job right away and sends you the five summaries, then creates a routine for itself.
+
+   {/* SCREENSHOT: the five summaries in chat. src/assets/screenshots/start/first-digest.png */}
+
+5. **Check the routine exists**
+
+   Open **Automations** (lightning icon) in the sidebar. There is a daily 9:00 routine, with its next run time and a button to run it now.
+
+</Steps>
+
+You now have a bot that works every day and only pings you when there is a result. Your first briefing arrives tomorrow at 9.
+
+:::caution[On a Mac, bots have your permissions]
+New bots start at **Full access**: they run commands without asking, as your macOS user, and can read your personal files. To have a bot ask first, set it to **Ask for approval** under **Bot settings → Permissions**; [approval levels](/concepts/approval-levels/) explains the four. For long-term use, move bots to [a separate server](/guides/home-server/).
+:::
+
+:::note[Routines don't run while the Mac sleeps]
+The machine has to be on. For 24/7 reliability see [where your bots should run](/concepts/where-to-run/).
+:::
+
+<Figure name="quickstart" alt="Black ink line drawing: an open laptop whose blank screen shows one glowing green dot, with a small robot beside it raising both fists in quiet celebration." />
+
+## Next steps
+
+- [A daily Search Console report](/recipes/gsc-daily-report/): multiple sites, several Google accounts, one chat report every morning at 9.
+- [Run OpenMausBot 24/7 on a mini PC](/guides/home-server/): starts at boot, recovers from crashes, and keeps running with your laptop closed.

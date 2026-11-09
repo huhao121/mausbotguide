@@ -1,0 +1,141 @@
+---
+title: 如何用团队文件批量配置 Bot
+description: 怎么在 OpenMausBot 里给 Bot 分工（响应快的聊天 Bot、带电脑的操作 Bot、定时巡检 Bot），以及怎么从命令行或通过 MCP 从 Claude Code 调用它们。
+verifiedOn: 0.1.146
+sidebar:
+  order: 4
+  label: 用团队文件配置 Bot
+---
+
+import Figure from '../../../../components/Figure.astro';
+import Diagram from '../../../../components/Diagram.astro';
+
+一个什么都干的 Bot，干什么都慢。更好的做法是用几个 Bot，各负责一类事，每个只给它需要的工具。
+
+<Figure name="team-file" alt="三联几何海报：三个一模一样的机器人，各自只拿一样工具：一个举着对话气泡，一个握着连到显示器的鼠标，一个在时钟下打着手电。" />
+
+## 前提条件
+
+- 一台 OpenMausBot 服务器，这台电脑能用 `ssh myserver` 登录（见[如何用家里的小主机 24 小时跑 OpenMausBot](/zh/guides/home-server/)）。
+- 至少登录好一个引擎（见[如何在服务器上登录引擎](/zh/guides/sign-in-engines/)）。
+
+下文的 `myserver` 是服务器的 SSH 别名，`<…>` 是要换成你自己的值。
+
+## 先做决定
+
+| Bot | 模型 | 工具 | 用来干什么 |
+|---|---|---|---|
+| **聊天 Bot** | 快、便宜，低思考强度 | 只有 shell 和文件，**不给电脑** | 问答、写作、总结，几秒就回 |
+| **操作 Bot** | 强模型 | 浏览器 + 一台电脑（本地 VM） | 操作网页、截图，以及任何需要“看”的事 |
+| **巡检 Bot** | 最便宜的模型 | 定时任务需要什么就给什么 | 定时检查，有变化才汇报 |
+
+为什么要分开：Bot 有的每个工具都会写进每一次提示词，工具越多，它绕远路的机会也越多。每个 Bot 只给它这份工作需要的工具，任务就短。详见[为什么 Bot 一个任务要跑几十分钟](/zh/concepts/long-tasks/)。
+
+## 交给 AI Agent
+
+OpenMausBot 支持用团队文件配置，所以 Agent 不用点任何界面就能建好 Bot。
+
+```text title="提示词"
+在我的 OpenMausBot 服务器（ssh 别名 "myserver"）上，用 `openmausbot team export` / `team apply` 建三个 Bot：
+
+- "聊天 Bot"：模型 <快模型>，effort: low，computer: off，approval: ask。
+- "操作 Bot"：模型 <强模型>，computer: vm，approval: ask。
+- "巡检 Bot"：模型 <最便宜的模型>，computer: browser，approval: full（它无人值守运行，没人能批审批卡片）。
+
+先把当前团队导出成文件，应用之前用 team apply --check 把差异给我看。
+然后给“巡检 Bot”建一个定时任务：每个工作日早上 9 点（按我的时区），检查 <要检查什么>，有变化才发一条简短总结。
+最后用 `openmausbot run "<Bot 名>" "<一个小任务>"` 证明每个 Bot 都能干活，把回复给我看。
+```
+
+## 团队文件长什么样
+
+<Diagram name="team-file" alt="team.yaml 分三部分：defaults 是所有 Bot 的默认值，bots 每个 Bot 单独一项，写明模型、审批级别、电脑和常驻指令，rooms 写成员和共享指令。" />
+
+团队文件描述整个工作区：有哪些 Bot、各自的模型、审批级别和电脑、常驻指令，有哪些房间，以及用到的引擎。下面是一个完整、可用的例子：
+
+```yaml title="team.yaml"
+version: 1
+
+defaults:                     # 没单独写这个字段的 Bot 都用这里的值
+  approval: full              # 无人值守的 Bot 没人在旁边批卡片
+  computer: off
+  cwd: /home/bot/work
+
+teams:
+  - name: Content
+    brief: |
+      数据、文案、配图是分开的活；交接的时候一定写清楚结果和文件放在哪。
+
+bots:                         # 至少一个
+  - name: Chat
+    team: Content
+    model: claude/claude-sonnet-5         # 引擎实例/模型，写法与 `openmausbot models` 的输出一致
+    effort: low                           # none | low | medium | high | xhigh | max
+    approval: full
+    computer: off
+    soul: |                               # 常驻指令：每一轮都会带上
+      你负责日常问答和写作。回答简短，结论放在最前面。
+
+  - name: Patrol
+    team: Content
+    model: opencodeGo/opencode-go/deepseek-v4.1-flash
+    approval: full
+    computer: browser
+    cwd: /home/bot/work/patrol          # 服务器上的绝对路径；写 ~ 会被拒绝
+    skills:
+      - { file: skills/report/SKILL.md, enabled: true }   # 路径相对于这个文件
+    soul: |
+      你负责定时检查。有变化才汇报；没有变化只回一句。
+
+  - name: Operator
+    team: Content
+    chief: true                           # 每个团队一个 Chief of Staff（总协调机器人）
+    model: antigravity/gemini-3.8-flash
+    approval: ask                         # 这个会碰生产环境
+    computer: vm
+    cwd: /home/bot/work/ops
+    browser: { enabled: true, profile: guest }
+    soul: |
+      你负责需要看屏幕的活。碰生产环境之前先问，并在审批请求里说清你要执行什么。
+
+rooms:
+  - name: Weekly
+    team: Content
+    members: [Chat, Patrol, Operator]     # 写 Bot 的名字
+    brief: 每周一，把上周的数字和下周的选题放在这里。
+    responder: mentions                   # everyone | mentions | 某个 Bot 的名字
+```
+
+例子里没细讲的几个字段：
+
+| 字段 | 说明 |
+|---|---|
+| `engines:` | 可选，需要完全访问权限。密钥必须写成 `{ env: 变量名 }` 或 `{ file: 路径 }`；直接写在文件里的密钥会被拒绝 |
+| `defaults:` | 对每个没单独设置该字段的 Bot 生效 |
+| `approval:` | 新建的 Bot 默认是 `full`。无人值守的 Bot 需要它，见[审批级别](/zh/concepts/approval-levels/) |
+| `cwd:` | 必须是服务器上存在的绝对路径；`~` 会被拒绝，因为它在服务器上可能指别的地方 |
+| `soul:` | 常驻指令，最多 24,000 字节；也可以用 `{ file: 路径 }` 放到单独的文件里 |
+| `tools:` | `{ allow: [...] }` 或 `{ deny: [...] }` 收窄 Bot 能用的工具；不写就是全部 |
+| `prune: true`（写在团队上） | 只有标了这一项的团队，`--prune` 才会删掉文件里不再列出的 Bot 和房间 |
+
+应用团队文件时要知道这几点：
+
+- 可以先预览，只看会改什么，不真的改。
+- 按名字匹配 Bot，改名时用 `was:` 指认原来的名字。文件里没写的字段保持原样。
+- 某一步被拒绝时它会停下，告诉你已经做了什么，再执行一次会接着做。
+- 默认不会删 Bot 和房间，只有标了 `prune: true` 的团队才能在应用时要求删除。
+
+## 让其他 Agent 给 Bot 派活
+
+给 Bot 派活不一定要打开 App。Claude Code、Codex、OpenCode 都可以把活派给你的 Bot，并等待结果。把这段发给你的 AI Agent：
+
+```text title="提示词"
+用 `openmausbot mcp` 把我的 OpenMausBot 服务器（ssh 别名 "myserver"）接成 MCP server，加到你自己的 MCP 配置里。
+然后让「<Bot 名>」做一件小事：<任务>，等它完成后把结果给我看。
+```
+
+## 日常使用建议
+
+- 一件事一个会话，每个任务开一个新会话。
+- 审批级别要明确设置。新建的 Bot，不管是在界面里建的还是用团队文件建的，默认都是 `full`（完全访问），所以每个 Bot 都写上 `approval:`。跑例行任务的 Bot 需要 `full`，否则会卡在没人批的审批卡片上。想先过目的 Bot 用 `ask`（请求批准）。`edits`（自动接受编辑）只有 Claude、Antigravity、Grok 等引擎提供，OpenCode 和 Codex 没有。如果服务端跑在你的 Mac 上，Bot 以你本人的身份运行，更要从严。
+- 自托管服务器上，已连接的应用默认全是灰的，要先在 **设置 → API 密钥 → 自建已连接应用服务** 里填 **Composio 项目密钥**。在那之前，用 CLI 往往更简单：在服务器上装 `gh`，用设备码登录一次，Bot 马上就能用 GitHub。注意：自托管的 Composio 密钥只能调用应用的工具，暂时不能监听应用事件。“当某件事发生时”这类需求用 webhook。

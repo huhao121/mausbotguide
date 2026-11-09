@@ -1,0 +1,134 @@
+---
+/**
+ * Page title with a section eyebrow and a "Copy page" button.
+ * The button copies the page as Markdown so readers can paste it straight into their AI agent.
+ */
+import { Icon } from '@astrojs/starlight/components';
+
+const route = Astro.locals.starlightRoute;
+const { entry, sidebar } = route;
+const isZh = Astro.currentLocale === 'zh-CN';
+
+type Entry = (typeof sidebar)[number];
+function groupOf(entries: Entry[]): string | undefined {
+	for (const e of entries) {
+		if (e.type === 'group') {
+			const hit = e.entries.some((c) => (c.type === 'link' ? c.isCurrent : groupOf([c])));
+			if (hit) return e.label;
+		}
+	}
+	return undefined;
+}
+const eyebrow = groupOf(sidebar);
+
+// Markdown for AI agents: drop MDX imports and comments, keep everything else as written.
+const body = (entry.body ?? '')
+	.replace(/^import .*$/gm, '')
+	.replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+	.replace(/<!--[\s\S]*?-->/g, '')
+	.replace(/\n{3,}/g, '\n\n')
+	.trim();
+const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
+const markdown = `# ${entry.data.title}\n\n${entry.data.description ? `> ${entry.data.description}\n\n` : ''}${body}\n\nSource: ${pageUrl}\n`;
+const showCopy = route.entry.data.template !== 'splash';
+const labels = isZh
+	? { copy: '复制页面', done: '已复制', hint: '以 Markdown 格式复制，方便粘贴给 AI' }
+	: { copy: 'Copy page', done: 'Copied', hint: 'Copy this page as Markdown for your AI agent' };
+---
+
+<div class="mbg-title">
+	{eyebrow && <p class="mbg-eyebrow">{eyebrow}</p>}
+	<div class="mbg-title-row">
+		<h1 id="_top">{entry.data.title}</h1>
+		{
+			showCopy && (
+				<mbg-copy-page data-done={labels.done}>
+					<button type="button" title={labels.hint}>
+						<Icon name="document" size="1rem" />
+						<span>{labels.copy}</span>
+					</button>
+					<template>{markdown}</template>
+				</mbg-copy-page>
+			)
+		}
+	</div>
+</div>
+
+<script>
+	class CopyPage extends HTMLElement {
+		connectedCallback() {
+			const button = this.querySelector('button');
+			const label = button?.querySelector('span');
+			const tpl = this.querySelector('template');
+			if (!button || !label || !tpl) return;
+			const original = label.textContent;
+			button.addEventListener('click', async () => {
+				try {
+					await navigator.clipboard.writeText(tpl.content.textContent ?? '');
+					label.textContent = this.dataset.done ?? original;
+					setTimeout(() => (label.textContent = original), 1600);
+				} catch {
+					/* clipboard blocked: leave the label unchanged */
+				}
+			});
+		}
+	}
+	customElements.define('mbg-copy-page', CopyPage);
+</script>
+
+<style>
+	.mbg-title {
+		margin-top: 1rem;
+	}
+	.mbg-eyebrow {
+		margin: 0 0 0.5rem;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--sl-color-gray-3);
+	}
+	.mbg-title-row {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+	h1 {
+		margin: 0;
+		font-size: var(--sl-text-h1);
+		line-height: var(--sl-line-height-headings);
+		color: var(--sl-color-white);
+	}
+	mbg-copy-page {
+		flex-shrink: 0;
+		margin-top: 0.35rem;
+	}
+	button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.35rem 0.75rem;
+		border: 1px solid var(--sl-color-hairline-shade);
+		border-radius: 12px;
+		background: var(--sl-color-bg);
+		color: var(--sl-color-gray-2);
+		font: inherit;
+		font-size: 0.875rem;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	button:hover {
+		color: var(--sl-color-white);
+		border-color: var(--sl-color-gray-4);
+	}
+	@media (max-width: 40rem) {
+		.mbg-title-row {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+		mbg-copy-page {
+			margin-top: 0;
+		}
+	}
+</style>

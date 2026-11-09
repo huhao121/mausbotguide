@@ -1,0 +1,58 @@
+---
+title: 如何安全升级、备份和回滚
+description: 安全升级自托管的 OpenMausBot：先备份、固定版本号、验证、一条命令回滚；升级前先看新版本有没有修你遇到的问题。
+verifiedOn: 0.1.146
+sidebar:
+  order: 5
+  label: 升级与回滚
+---
+
+import Figure from '../../../../components/Figure.astro';
+
+OpenMausBot 几乎每天都发新版本，但不必每版都升。新版本修了你遇到的问题，或者加了你想要的功能，再升级就行。
+
+<Figure name="upgrade" alt="复古登山海报：机器人迈上更高一级岩架，腰间的橙色绳索系在下方岩架的锚点上，背包也稳稳地扣在那里。" />
+
+## 前提条件
+
+- 一台 OpenMausBot 服务器，这台电脑能用 `ssh myserver` 登录（见[如何用家里的小主机 24 小时跑 OpenMausBot](/zh/guides/home-server/)），并且按那篇的方式用 npm 安装、固定了版本号。
+
+下文的 `myserver` 是服务器的 SSH 别名，`<…>` 是要换成你自己的值。
+
+## 先做决定
+
+- 固定版本号。安装时写明具体版本，不要用 latest，这样想回到旧版本也很简单。
+- 先备份。Bot、会话、记忆都在 `~/.openmausbot` 里。各引擎的登录在它们自己的目录（比如 `~/.codex`、`~/.claude`），升级不会动它们。备份时排除可以重新下载的 `tools` 目录，体积不大（我们的约 37 MB）。
+
+## 交给 AI Agent
+
+```text title="提示词"
+检查我的 OpenMausBot 服务器（ssh 别名 "myserver"）要不要升级，我同意的话就安全地升级。
+
+1. 列出已安装的版本和 npm 上的最新版本，总结这两个版本之间的 GitHub release notes，
+   重点标出跟我在用的引擎和功能有关的内容（不确定我用什么就问我）。
+2. 等我同意。然后把 ~/.openmausbot 备份到 ~/omb-backup-<日期>.tgz，排除 tools 目录。
+3. 运行 `npm install --global --prefix "$HOME/.local" openmausbot@<新版本>`，重启服务，
+   等到服务 active、/api/health 有响应。
+4. 验证：`openmausbot doctor`、Bot 数量没变、已配对的会话都还在、我主力引擎的模型列表能加载、
+   远程访问地址仍然返回 200。
+5. 把回滚到旧版本的准确命令给我。
+```
+
+## 验证
+
+升级后，把已经打开的浏览器和手机页面刷新一下，加载新版本，再给任意一个 Bot 发一句话，能正常回复就行。
+
+## 回滚
+
+出问题的话，把这段发给你的 AI Agent：
+
+```text title="提示词"
+把我的 OpenMausBot 服务器（ssh 别名 "myserver"）回滚到 <旧版本>：用 npm 把这个版本重新装到 ~/.local，重启 openmausbot 服务，确认服务 active 后告诉我结果。
+```
+
+一般回滚不需要恢复数据，备份是留着出大问题时用的。
+
+## 我们升级的一次经历
+
+从 0.1.143 升到 0.1.146，所有 Bot 和已配对的设备都没受影响，还顺带解决了一个我们之前手动绕过的问题：OpenCode 的模型要重启后台服务才能显示。这是升级前看 release notes 时发现的。

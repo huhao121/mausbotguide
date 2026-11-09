@@ -1,0 +1,99 @@
+---
+title: "Approval levels: what a bot asks you before acting"
+description: OpenMausBot has four approval levels, and every new bot starts at Full access, so it runs commands and edits files without asking. What each level blocks, which level fits which job, how to change one conversation, and what Full access still does not bypass.
+sidebar:
+  order: 4
+  label: Approval levels
+---
+import Figure from '../../../components/Figure.astro';
+import Diagram from '../../../components/Diagram.astro';
+
+
+**Every new bot starts at Full access.** It runs commands, edits files and uses its computer without showing you a card first. That is OpenMausBot's own default.
+
+This page covers what each of the four levels blocks, which one fits a given job, and how to change it. By the end you should be able to answer, for every bot on a machine: if an AI went wrong with it, how bad could it get?
+
+<Figure name="approval-gate" alt="Four doorways of increasing width in a row: a robot stopped at a narrow slit, one held at a barrier showing a card, one passing through a turnstile, and one walking freely through a wide-open door." />
+
+## What each level blocks
+
+| In the app | In a team file | What it asks about |
+|---|---|---|
+| **Ask for approval** | `ask` | Asks before commands and file changes. The most careful level |
+| **Auto-accept edits** | `edits` | Edits files freely, asks before commands. Only some engines offer it |
+| **Approve for me** | `auto` | The engine's own reviewer approves routine actions and asks about the rest; engines without one fall back to Ask |
+| **Full access** | `full` | Asks nothing. Where every new bot starts |
+
+Details that catch people out:
+
+- Not every engine has Auto-accept edits. Claude, Antigravity and Grok do; OpenCode and Codex do not, so on those use `ask` or `full`.
+- On Codex, Ask for approval already writes files, inside a sandbox limited to its working folder, which is why there is no separate edits level there.
+- **Full access also auto-applies OpenMausBot's own changes**: bot settings, team setup, deleting a bot, writing skills, with no second confirmation.
+
+## What Full access does not bypass
+
+- OS privacy controls, sign-in, CAPTCHAs and multi-factor authentication.
+- A provider's own account and permissions, or workspace and team ownership.
+- Grants that share a computer with another bot. It only decides whether a card appears. It won't sign in for you or grant you access.
+- Real questions and missing credentials still reach you. Full access does not make a bot self-sufficient.
+- **Sending** through connected apps (email, messages, posts, payments) follows the bot's **Sending on your behalf** setting: every time asks. Send without asking, or no setting at all, sends straight away. That setting is separate from the approval level.
+
+## Some things no level asks about
+
+A bot reading **its own** files never needs approval: standing instructions (`SOUL.md`), skills, memory, conversation folders. That covers plain read commands such as `cat`, `head`, `grep`, `ls` and Claude's Read, Grep and Glob, as long as every path is inside its own folders.
+
+Add a pipe, a redirect, a second command, a variable or a glob to the command and it asks as usual. Reads in a guest's turn always ask, because that folder holds the owner's memory.
+
+So whether a bot can see your SSH keys depends mostly on **which account it runs as**, not on the approval level. On a server with a dedicated account, it can't reach those files at all.
+
+## Which level for which job
+
+| What the bot does | Use |
+|---|---|
+| Runs routines, fires on webhooks, nobody watching | **Full access.** With Ask for approval it stalls on a card no one will answer |
+| Touches production: deploys, databases, live config | At least **Ask for approval**, or give it an account that can only read |
+| Everyday chat, writing, research | Full access is fine; Ask for approval is steadier at the cost of more taps |
+| Installed on your own Mac | Be strict. It runs as you and can read all your personal files |
+
+**Unattended work and "ask me first" contradict each other.** A routine that stops halfway to wait for a person is worse than one that never ran. So the answer is not to set everything to the most careful level: **separate what can touch production from what cannot**, and be strict only about the former.
+
+<Diagram name="approval-flow" alt="Decision flow: if the bot does not touch production, use Full access. If it does, use Ask for approval when someone is there to answer cards, or a read-only account when nobody is." />
+
+## How to change it
+
+You change a bot's default, which applies to **all** its conversations, or just the one in front of you. Four scopes:
+
+1. **One bot**: **Bot settings → Permissions**.
+2. **One conversation**: the approval picker in the chat, which affects that conversation only.
+3. **A whole department**: **Set for all bots in this department…** in the sidebar menu lists what each bot will get before anything changes.
+4. **Many at once**: one `approval:` line per bot in a [team file](/guides/team-file/).
+
+:::caution[A Chief of Staff passes its level down]
+Work a Chief hands out with `coordinate_bots` runs at the level of the Chief's conversation, and it flows down every hop. Setting the Chief to Full access therefore loosens the bots working for it. To tighten a team, start with the Chief.
+:::
+
+**Changing a level while the bot works also applies**, depending on the engine: API engines take it from the next tool call. Engines with their own permission modes (Claude, Codex…) apply a lower level from the next turn. Engines whose requests OpenMausBot answers (OpenCode, Kimi…) from the next request. A card already on screen is still yours to answer.
+
+## What the cards offer
+
+- **Allow once**: this action only.
+- **Always allow** / **Always allow this command**: stop asking for this kind of action.
+- **Deny**: stop, and the bot sees the refusal.
+- **Stop asking \{bot\} about \{key\}**: for credential requests.
+
+Every decision goes into the decision log, including the ones a routine raised when nobody was at the keyboard.
+
+## If you want Full access everywhere
+
+Do at least two things: **run bots as a dedicated user**, and **keep production credentials off that machine**. Those two matter more than the level itself.
+
+## Let AI audit it
+
+```text title="Prompt"
+Read the approval level of every bot on my OpenMausBot server (ssh alias "myserver"):
+`openmausbot team export --out /tmp/team.yaml` and look at each bot's approval field.
+Then check each bot's working folder for deploy scripts, cloud credentials, SSH private keys and database URLs.
+
+Give me a table: bot, approval level, working folder, the sensitive things it can reach, and the level you recommend
+(keep full / switch to ask / move to a read-only account), ordered by risk. Show me only — change nothing.
+```

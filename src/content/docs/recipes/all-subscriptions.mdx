@@ -1,0 +1,73 @@
+---
+title: Claude, Codex, Gemini and all your subscriptions in one chat
+description: Stop switching between claude, codex, agy and opencode. OpenMausBot plugs in the subscriptions you already have. Each bot gets a model, with cheap ones for daily work and strong ones for heavy lifting. Includes how we split ours.
+verifiedOn: 0.1.146
+sidebar:
+  order: 1
+  label: All your subscriptions, one place
+---
+
+import Figure from '../../../components/Figure.astro';
+
+If you pay for Claude, ChatGPT (Codex), Google AI (Antigravity) and OpenCode Go like we do, you probably jump between CLIs all day. None of the quotas get used up, and it's hard to say which job belongs where.
+
+With OpenMausBot, each subscription becomes one or more bots, and you direct them from one chat app. It drives the CLIs already signed in on your computer or server, so you don't need new accounts and your requests don't go through a proxy.
+
+<Figure name="subscriptions" alt="Four robots on the left, each with a differently coloured cable; the cables merge into one green line that plugs into a single chat bubble, and a finger taps the bubble." />
+
+## How we split our bots (November 2026)
+
+| Engine / subscription | Model | Used for | Why |
+|---|---|---|---|
+| OpenCode Go | DeepSeek V4.1 Flash | Default bot, daily report, odd jobs | Subscription, cheap and fast, good at Chinese; fine to run all day |
+| Antigravity (Google AI) | Gemini 3.8 Flash | Research, topic tracking | Strong multimodal: watches videos, reads pages |
+| Claude Code / Codex (separate setup on a Mac) | Claude, GPT models | Coding, heavy work | Already signed in on the Mac; works the moment the app opens |
+
+On the Mac, the default Chief and one day-to-day bot run Claude Sonnet 5, one bot runs Opus 5.5 for heavy work, Codex handles the coding, and two bots run DeepSeek on OpenCode Go for small jobs. They all run on one machine without getting in each other's way.
+
+We put daily work on cheap subscription models and save the strong ones for occasional heavy work. That way every quota gets used and no single one runs dry.
+
+## Connect your subscriptions
+
+- On a Mac, the `claude` and `codex` you're signed in to are detected automatically. See the [quickstart](/start/).
+- On a server, sign each engine in once. Codex and Kimi use device codes, and an OpenCode login can be piped over from your Mac. See [how to sign in to engines](/guides/sign-in-engines/).
+- Any OpenAI-compatible API (DeepSeek's API, local LM Studio) can be added as an engine in settings, with no code.
+
+Once connected, open the model selector at the top of any chat to see which models this machine can use.
+
+## Switching a bot's model
+
+Open a chat with the bot, click the model selector at the top, pick a new model, and choose where it applies under **Apply model changes to**:
+
+- **Only this thread**: changes this chat only. Other chats stay as they are.
+- **Thread + bot default**: the bot uses the new model by default from now on.
+
+To change a group at once, open the department menu in the sidebar, choose **Set for all bots in this department…**, and go to **Model and effort**.
+
+If the bot runs on a server, you can also send this to your AI agent:
+
+```text title="Prompt"
+On my OpenMausBot server (ssh alias "myserver"), change the default model of "<bot name>" to <the model you want>.
+Look up the exact model name with openmausbot models first; don't guess. Then tell me the old and new models.
+```
+
+:::caution[Same name, different bill]
+In OpenCode, `Go · DeepSeek V4.1 Flash` uses your Go subscription; `Zen · DeepSeek V4.1 Flash` bills your Zen balance per token. Check the prefix before you pick.
+:::
+
+## See where the quota goes
+
+**Settings → Usage** shows one card per signed-in plan: how much is left and when it resets. A few things are easy to misread:
+
+- Claude reports both the 5-hour and the weekly window, each with a reset countdown.
+- Codex and ChatGPT plans report only the weekly window. The 5-hour row says "Not reported by this plan" even when you're signed in.
+- One subscription can show up twice. Our machine has both a Codex and a ChatGPT instance (both driving the same `codex` CLI), and the page lists them separately with the same numbers.
+- Pay-per-token endpoints show a monthly spend and a per-model breakdown. Subscription plans show percentages.
+
+Give more bots to the subscription with the most headroom.
+
+{/* SCREENSHOT: Usage page with Claude / Codex quotas. src/assets/screenshots/recipes/usage.png */}
+
+## Next steps
+
+- [Watch and approve from your phone](/recipes/phone-remote-control/): the server works at home, and you check progress and approve cards from anywhere.

@@ -1,0 +1,56 @@
+---
+title: Watch your bots work and approve from your phone
+description: OpenMausBot runs on a server at home; from your phone you see what every bot is doing, approve a card with one tap, or press Stop. The phone is just a remote; bots keep working when you close it.
+verifiedOn: 0.1.146
+sidebar:
+  order: 2
+  label: Approve from your phone
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Figure from '../../../components/Figure.astro';
+
+Most agent tools assume you sit at your computer and watch. OpenMausBot doesn't: **the work happens on the server, and you can look in from anywhere.** On the train you open your phone: the SEO bot just posted its report, the research bot is reading sources, another bot is waiting for you to approve a command. Tap **Allow once** and it continues.
+
+## What you can do from the phone
+
+| | Phone browser (paired with a code) | Native iOS app |
+|---|---|---|
+| Chat with any bot, start new jobs | Yes | Yes |
+| Answer approval cards | Yes | Yes |
+| Follow progress and history, press Stop | Yes | Yes |
+| Create bots, change models, connect apps | Yes, same as on a computer | No, use the web app |
+| Alerts when the app is closed | No | No (only while open or briefly in the background) |
+
+The phone is only a remote. Close it and bots keep working on the server.
+
+<Figure name="phone-approval" alt="Watercolor: a person on a train holds up a phone showing two buttons; outside the window at dusk, a dotted line of small robots runs from the phone to a lit house on a distant hill." />
+
+## Set it up
+
+<Steps>
+
+1. **Give the server an address your phone can reach.** We recommend Tailscale: nothing public, free for personal use. Your AI agent can set it up: see [how to reach your server from your phone](/guides/remote-access/).
+
+2. **Install Tailscale on the phone** and sign in to the same account.
+
+3. **Create a pairing code on your computer:** **Settings → Remote access → Create pairing code** shows a QR code and a code.
+
+4. **Open the pairing link on the phone.** For an app-like feel, open it in Safari (iPhone) or Chrome (Android) and add it to the home screen. Neither the web app nor the iOS app alerts you once it is closed, so check in rather than waiting for a ping.
+
+</Steps>
+
+{/* SCREENSHOT: phone showing the bot list and an approval card. src/assets/screenshots/recipes/phone.png */}
+
+:::caution[The page loads but stays on "connecting"]
+On mobile data, if Tailscale can't get a direct path it falls back to a relay with much higher latency and the live event stream can't keep up. `tailscale ping <phone>` showing `via DERP` confirms it. Causes and fixes: [remote access](/guides/remote-access/).
+:::
+
+## Make the phone experience better
+
+- Choose where you want a say. New bots run at **Full access**. For a bot whose actions you want to check, set **Ask for approval**. Cards are easy to answer on a phone. Keep routine bots at Full access, or they stall on a card while nobody is looking.
+- Have routines report only when there is something new. Fewer messages on a phone means each one matters (see the [X trends recipe](/recipes/x-trend-digest/)).
+
+## Next steps
+
+- [A daily Search Console report](/recipes/gsc-daily-report/): multiple sites, several Google accounts, one chat report every morning at 9.

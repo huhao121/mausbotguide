@@ -1,0 +1,48 @@
+# Weekly health check: external links on the built site. Opens or updates an issue on failure.
+name: Weekly
+
+on:
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: External link check
+        id: lychee
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --no-progress --root-dir "${{ github.workspace }}/dist" "dist/**/*.html"
+          output: lychee-report.md
+          fail: false
+      - name: Open or update issue
+        if: steps.lychee.outputs.exit_code != 0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Weekly link check found broken links"
+          num="$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"$title\"" --json number --jq '.[0].number')"
+          if [[ -n "$num" ]]; then
+            gh issue comment "$num" -R "$GITHUB_REPOSITORY" --body-file lychee-report.md
+          else
+            gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body-file lychee-report.md
+          fi

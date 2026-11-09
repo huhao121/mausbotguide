@@ -1,0 +1,114 @@
+---
+title: How to put bots on a schedule
+description: Tell a bot when to run in plain words; it turns that into cron and OpenMausBot wakes it on time. Writing the brief, time zones, cron syntax, what happens when the computer sleeps, how failed runs recover, and how to keep quiet days quiet.
+sidebar:
+  order: 6
+  label: Routines
+---
+import Figure from '../../../components/Figure.astro';
+
+
+Routines are the part of OpenMausBot that pays for itself: say "every morning at 9, put these numbers together for me", and the bot builds the schedule, writes the script, and then wakes up on its own each day. It only talks to you when there is a result or a problem.
+
+This page covers how that actually runs, where it breaks, and how to stop it from pestering you.
+
+<Figure name="routine" alt="One day drawn as an arc from sunrise to moonrise: a plug marks the machine starting up, a robot stands at the peak reading a report, and a circular arrow marks an automatic retry." />
+
+## Decisions
+
+| Decide | Recommendation | Why |
+|---|---|---|
+| Which machine runs it | **An always-on server** | The scheduler lives inside the app; there is no external service. A sleeping computer runs nothing, and the app cannot wake a sleeping Mac |
+| How to write the time | **With a time zone**, such as `Asia/Shanghai` | Without one, another computer or browser means hours of drift |
+| How often | **Once a day or less** | Every run wakes a model, which costs. Let a script do the work and skip the model when nothing changed |
+| What happens on failure | Have it **explain in the conversation** | A silent missed report is worse than an error |
+
+## Brief for the bot
+
+Describe the time in ordinary language. The bot turns it into a cron expression and OpenMausBot validates it. The routine's card shows the rule, the time zone and the next three dates, with Edit, Pause and Undo.
+
+```text title="Brief for the bot"
+Every weekday at 9:00 (<your time zone>), check Search Console for my sites:
+- sync into the local database first (use the existing script, don't rewrite it each time);
+- only tell me if one of these is true: clicks fell more than 20% against the same weekday last week,
+  a site's CTR dropped, or the sync failed;
+- otherwise reply with one line, "all normal today", and nothing else;
+- write the result into this conversation, and on failure say which step failed and the exact error.
+
+Build it, run it once now so I can see, then turn the schedule on.
+```
+
+Before handing it over, decide what "something happened" means. Leave that out and the bot will send you a full report every day.
+
+## In the app
+
+Under **Automations → Schedule**, pick **Monthly**, **Yearly** or **Custom cron (advanced)**. A new routine uses your browser's time zone, and you can change it. A saved routine keeps its own zone even when you open it on another computer.
+
+**Run now** starts it immediately. The switch pauses and resumes it.
+
+## Writing cron
+
+Five fields: **minute hour day-of-month month day-of-week**. `L` (last day), `W` and `#` (nth weekday) work.
+
+| When you want it | Expression |
+|---|---|
+| 9:00 on the 1st of each month | `0 9 1 * *` |
+| 9:00 on the last day of each month | `0 9 L * *` |
+| 9:00 on the second Monday | `0 9 * * MON#2` |
+| 9:00 and 17:00, Monday to Friday | `0 9,17 * * MON-FRI` |
+| Every 15 minutes during working hours | `*/15 9-16 * * MON-FRI` |
+
+Traps:
+
+- The finest resolution is one minute. For "every 90 minutes", use an interval schedule, not `*/90`. That means "minute 0 and minute 90", and there is no minute 90.
+- Restricting both day-of-month and day-of-week means either matches, as in standard cron. Leave one as `*` if you mean only the other.
+- **Dates that do not exist are skipped**: the 31st skips short months, February 29 runs in leap years. Use `L` for "last day of every month".
+- **Daylight saving** never runs twice: a gap moves the wall-clock time forward, and a repeated hour runs once, at its first occurrence.
+
+## When the computer sleeps
+
+The scheduler lives in the app, and **no cloud service watches the clock for you**. So:
+
+- A sleeping computer or a quit app runs nothing, and the app cannot wake a sleeping Mac.
+- What the desktop app can do: while plugged in, it keeps the computer from idle-sleeping in the hour before a due routine and while one runs (**Automations → Keep this computer awake for scheduled automations**, on by default). A closed lid still sleeps.
+- For reliability, run OpenMausBot on an always-on server. See [how to run OpenMausBot 24/7 on a home server](/guides/home-server/).
+- **A missed run can catch up once**: up to 12 hours late, one missed occurrence is dispatched. Anything older leaves a missed-run receipt. Runs do not pile up in overlapping copies, and every missed minute is not replayed.
+
+## What it recovers from on its own
+
+Unattended runs (scheduled, webhook or Run now) handle these by themselves:
+
+| What happened | What it does |
+|---|---|
+| The engine stalled, the provider rate-limited it, or OpenMausBot restarted | Waits 15 seconds (a minute after a rate limit), then runs once more in the same conversation, told to check what the first attempt already did. A second failure fails it |
+| The run was cut off by a shutdown | Picked up once on the next start as the same run, without creating a copy |
+| The bot or conversation was busy | Checks every 30 seconds, for up to an hour |
+| Out of quota on one AI, another can carry on | Restarts on that AI. Claude says when its quota resets, and a reset within 12 hours puts the run just after it |
+
+When the problem is a signed-out AI, out of credit, or a tool that needs your approval, it does not retry blindly: you get one notification per bot and cause saying what to do.
+
+**A run that needs approval waits for you.** Its card and the log say what it waits for ("Waiting for your approval to use…"), and the waiting time does not count against the run limit. If the engine's own wait times out, the run stops with "nobody answered the approval" and you are notified.
+
+Each routine's card shows "N of M runs OK this week", and the log says what happened on each run.
+
+## Keeping quiet days quiet
+
+The usual failure mode is noise. Three habits:
+
+1. Write "what counts as something" into the brief. Thresholds, the comparison baseline, what to ignore.
+2. Let a script do the work. Pulling data, comparing, drawing charts happens in the script. Wake the model only to judge or explain. A day with no change then costs almost nothing.
+3. Say one line when nothing changed. "All normal today" beats silence: you can see it ran.
+
+To go further, a routine can name **checks** (calendar, mail, another routine's runs): plain code that runs on each tick before any AI turn, so a quiet tick starts no model at all.
+
+## Check it worked
+
+The **Automations** page shows the next run time, recent results, how long each run waited and whether it is waiting for your approval.
+
+## Common problems
+
+**It runs on time but never finishes.** It is probably stuck on an approval. An unattended bot needs **Full access**, or it waits for a card nobody will answer. See [approval levels](/concepts/approval-levels/).
+
+**The time is wrong after moving to another computer.** A saved cron keeps its own time zone. Check which one you wrote. New routines follow your browser until you set one.
+
+**Deleting a bot leaves its routine running.** It doesn't: deleting a bot deletes its routines, webhooks and run history, and a webhook address stops working at once.

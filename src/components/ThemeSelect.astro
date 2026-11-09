@@ -1,0 +1,133 @@
+---
+/**
+ * Theme switch: a three-option segmented control (light / dark / system).
+ * Replaces Starlight's native <select>, which renders differently on every OS.
+ * Pattern: WAI-ARIA radio group — one tab stop, arrow keys move the selection.
+ * Storage and the no-flash first paint stay with Starlight's ThemeProvider
+ * (localStorage key "starlight-theme").
+ */
+import { Icon } from '@astrojs/starlight/components';
+
+const options = [
+	{ value: 'light', icon: 'sun', label: Astro.locals.t('themeSelect.light') },
+	{ value: 'dark', icon: 'moon', label: Astro.locals.t('themeSelect.dark') },
+	{ value: 'auto', icon: 'laptop', label: Astro.locals.t('themeSelect.auto') },
+] as const;
+---
+
+<mbg-theme-switch>
+	<div class="switch" role="radiogroup" aria-label={Astro.locals.t('themeSelect.accessibleLabel')}>
+		{
+			options.map((o) => (
+				<button
+					type="button"
+					role="radio"
+					data-value={o.value}
+					aria-checked={o.value === 'auto' ? 'true' : 'false'}
+					tabindex={o.value === 'auto' ? '0' : '-1'}
+					aria-label={o.label}
+					title={o.label}
+				>
+					<Icon name={o.icon} size="1rem" />
+				</button>
+			))
+		}
+	</div>
+</mbg-theme-switch>
+
+{/* Inline so the stored choice is shown before first paint (no flicker). */}
+<script is:inline>
+	(() => {
+		const t = (typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme')) || 'auto';
+		document.querySelectorAll('mbg-theme-switch [role="radio"]').forEach((b) => {
+			const on = b.dataset.value === t;
+			b.setAttribute('aria-checked', String(on));
+			b.tabIndex = on ? 0 : -1;
+		});
+	})();
+</script>
+
+<script>
+	type Theme = 'auto' | 'dark' | 'light';
+	const storageKey = 'starlight-theme';
+
+	const parse = (v: unknown): Theme => (v === 'light' || v === 'dark' ? v : 'auto');
+	const load = (): Theme => {
+		try {
+			return parse(localStorage.getItem(storageKey));
+		} catch {
+			return 'auto';
+		}
+	};
+	const systemTheme = () => (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+	function apply(theme: Theme) {
+		document.documentElement.dataset.theme = theme === 'auto' ? systemTheme() : theme;
+		try {
+			localStorage.setItem(storageKey, theme === 'auto' ? '' : theme);
+		} catch {
+			/* storage blocked: the choice lasts for this page only */
+		}
+		// Keep every instance (header and mobile menu) in sync.
+		document.querySelectorAll<HTMLButtonElement>('mbg-theme-switch [role="radio"]').forEach((b) => {
+			const on = b.dataset.value === theme;
+			b.setAttribute('aria-checked', String(on));
+			b.tabIndex = on ? 0 : -1;
+		});
+	}
+
+	matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+		if (load() === 'auto') apply('auto');
+	});
+
+	class ThemeSwitch extends HTMLElement {
+		connectedCallback() {
+			const buttons = [...this.querySelectorAll<HTMLButtonElement>('[role="radio"]')];
+			buttons.forEach((b, i) => {
+				b.addEventListener('click', () => apply(parse(b.dataset.value)));
+				b.addEventListener('keydown', (e) => {
+					const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+					if (!step) return;
+					e.preventDefault();
+					const next = buttons[(i + step + buttons.length) % buttons.length]!;
+					apply(parse(next.dataset.value));
+					next.focus();
+				});
+			});
+		}
+	}
+	customElements.define('mbg-theme-switch', ThemeSwitch);
+</script>
+
+<style>
+	.switch {
+		display: inline-flex;
+		gap: 2px;
+		padding: 2px;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 999px;
+	}
+	button {
+		display: grid;
+		place-items: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		padding: 0;
+		border: 0;
+		border-radius: 999px;
+		background: transparent;
+		color: var(--sl-color-gray-3);
+		cursor: pointer;
+	}
+	button:hover {
+		color: var(--sl-color-white);
+	}
+	button[aria-checked='true'] {
+		background: var(--sl-color-gray-6);
+		color: var(--sl-color-white);
+	}
+	button:focus-visible {
+		outline: 2px solid var(--sl-color-text-accent);
+		outline-offset: 1px;
+	}
+</style>

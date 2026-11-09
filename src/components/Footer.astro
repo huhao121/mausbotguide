@@ -1,0 +1,26 @@
+---
+import Default from '@astrojs/starlight/components/Footer.astro';
+const isZh = Astro.currentLocale === 'zh-CN';
+---
+<Default><slot /></Default>
+<p class="feedback">
+	<a href="https://github.com/huhao121/mausbotguide/issues/new" rel="noopener">
+		{isZh ? '发现错误或内容过时？在 GitHub 上告诉我们' : 'Spotted a mistake or something out of date? Tell us on GitHub'}
+	</a>
+</p>
+<p class="disclaimer">
+	{isZh
+		? 'MausBot Guide 是独立的非官方社区教程站，与 Supamaus Software Private Limited 无隶属关系。OpenMausBot、MausBot 名称及吉祥物是其各自所有者的商标。'
+		: 'MausBot Guide is an independent, unofficial community guide and is not affiliated with Supamaus Software Private Limited. OpenMausBot, MausBot and the mascot are trademarks of their respective owner.'}
+</p>
+<style>
+	.feedback {
+		margin-top: 1.5rem;
+		font-size: var(--sl-text-sm);
+	}
+	.disclaimer {
+		margin-top: 1.5rem;
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+	}
+</style>

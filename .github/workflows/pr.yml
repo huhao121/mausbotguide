@@ -1,0 +1,100 @@
+# Pull request gate: every change to main goes through this.
+# "check" is a required status check (repository ruleset). "preview" deploys a
+# preview version of the Worker and comments its URL; it never touches production.
+name: PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Type and content check
+        run: pnpm check
+      - name: Build
+        run: pnpm build
+        env:
+          BUILD_ID: ${{ github.event.pull_request.head.sha }}
+      - name: Secret scan (PR commits)
+        run: |
+          bash scripts/ci/install-gitleaks.sh
+          gitleaks git . --redact --no-banner --exit-code 1 \
+            --log-opts="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+      - name: Internal link check
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --offline --no-progress --root-dir "${{ github.workspace }}/dist" "dist/**/*.html"
+          fail: true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  preview:
+    name: preview
+    needs: check
+    # Same-repo branches only: fork PRs never receive secrets.
+    # Off by default: a preview URL shows the Cloudflare account's workers.dev subdomain.
+    if: github.event.pull_request.head.repo.full_name == github.repository && vars.DEPLOY_ENABLED == 'true' && vars.PREVIEW_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: preview
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist
+      - name: Upload preview version
+        id: upload
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          pnpm exec wrangler versions upload --preview-alias "pr-$PR" --message "PR #$PR $SHA" | tee upload.log
+          url="$(grep -oE "https://pr-${PR}-[^ ]+workers\.dev" upload.log | head -1)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Comment preview URL
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          URL: ${{ steps.upload.outputs.url }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          body="🔎 Preview for ${SHA:0:7}: ${URL:-see the preview job log}"
+          gh pr comment "$PR" -R "$GITHUB_REPOSITORY" --body "$body" --edit-last --create-if-none

@@ -1,0 +1,73 @@
+---
+title: 如何从手机和笔记本连上服务器
+description: 用 Tailscale（私有 HTTPS）或隧道（公网 HTTPS + 配对码）替代 SSH 隧道，配对桌面 App 和手机，以及连接很慢时该查什么。
+verifiedOn: 0.1.146
+sidebar:
+  order: 2
+  label: 从手机和笔记本连上
+---
+import Diagram from '../../../../components/Diagram.astro';
+
+
+## 最终效果
+
+服务器有一个固定的 HTTPS 地址，所有设备都能用。从此不用再开 SSH 隧道，可以装桌面 App，也能在手机上跟 Bot 聊天。
+
+## 前提条件
+
+- 一台 OpenMausBot 服务器，这台电脑能用 `ssh myserver` 登录（见[如何用家里的小主机 24 小时跑 OpenMausBot](/zh/guides/home-server/)）。
+- 选 Tailscale 的话，需要一个 Tailscale 账号（个人使用免费）。
+
+下文的 `myserver` 是服务器的 SSH 别名，`<…>` 是要换成你自己的值。
+
+## 先做决定
+
+| | Tailscale（`--tailscale`） | OpenMausBot 托管隧道（`--tunnel`） | 自己的域名（`--domain` 或 `--public-url`） |
+|---|---|---|---|
+| 谁能访问 | 只有你 tailnet 里的设备 | 任何拿到配对码的人 | 任何拿到配对码的人 |
+| 前提 | 服务器和各设备都装 Tailscale | 一个 OpenMausBot 账号（邮箱验证码） | 一个托管在 Cloudflare 的域名 |
+| 手机要装 App 吗 | 要装 Tailscale | 不用 | 不用 |
+| 适合谁 | **注重隐私** | 最快拿到公网地址 | 想要自己掌控的公网地址 |
+
+我们建议先用 Tailscale，不向公网暴露任何端口，个人使用免费。
+
+<Diagram name="remote-access" alt="笔记本和手机连到你的服务器有两条路：Tailscale 私有网络（只有你 tailnet 里的设备能连），或 OpenMausBot 托管隧道（公网 https 地址，凭配对码才能进）。服务器的 8799 端口不对外开放，每台设备都要配对一次。" />
+
+## 交给 AI Agent
+
+```text title="提示词"
+把我的 OpenMausBot 服务器（ssh 别名 "myserver"）的远程访问从 SSH 隧道换成 Tailscale：
+
+1. 安装 Tailscale，运行 `tailscale up --hostname=<名字>`。把它输出的登录链接给我，然后等我。
+2. 我确认后，运行 `sudo tailscale set --operator=<服务器用户>`，让 OpenMausBot 不用 root 也能管理 Tailscale；
+   再运行 `openmausbot service install --tailscale`，并执行它打印的命令重新加载、重启服务。
+3. 在这台电脑上验证：https://<名字>.<tailnet>.ts.net/api/health 返回 {"app":"openmausbot"...}。
+4. 用 `openmausbot pair --label "<设备名>" --public-url https://<名字>.<tailnet>.ts.net` 生成配对链接，
+   这台电脑一个、我的手机一个，一个一个给我（每个只有 5 分钟有效）。
+5. 关掉这台电脑上原来那条 SSH 隧道进程。
+
+不要改服务器的 DNS、路由和 exit node。
+```
+
+## 需要你亲自做的
+
+1. **打开 Tailscale 的登录链接**，批准这台机器。
+2. 在 Tailscale 管理后台：**DNS → HTTPS Certificates → Enable**（OpenMausBot 需要证书）。再到这台机器上点 **Disable key expiry**（否则 180 天后会自动掉线）。
+3. **手机上装 Tailscale**，登录同一个账号。
+4. **在对应设备上打开配对链接**。桌面 App 里用菜单栏的 **Server → Add Server from Copied Pairing Link…**（这个系统菜单目前只有英文），把链接粘进去。除非你真想把所有 Bot 搬到这台服务器，否则别点 **把 &lt;服务器名&gt; 设为我常用的**。
+
+{/* 截图：Tailscale 后台的 HTTPS Certificates 开关。src/assets/screenshots/remote-access/ts-https.png */}
+{/* 截图：桌面 App 的 Server 菜单 > Add Server from Copied Pairing Link。src/assets/screenshots/remote-access/app-add-server.png */}
+
+## 验证
+
+在 tailnet 里任意一台设备上打开 `https://<名字>.<tailnet>.ts.net/api/health`，能返回内容就通了。配对过的浏览器、App 和手机，可以在 **设置 → 远程访问 → 已配对的设备** 里看到。
+
+手机能做什么取决于怎么配对。用配对码配对的手机浏览器，和电脑上的网页版一样。原生 iOS App，以及只给了客户端权限的设备，只能聊天、处理审批卡片和查看。新建 Bot、改模型、连接应用要在网页版里做。两者在 App 关闭后都收不到提醒：网页版没有推送通知，iOS App 只在打开时或刚切到后台的一小段时间内提醒。
+
+## 常见问题
+
+- **切换之后服务一直崩溃重启。** 日志写着 `Tailscale refused: on Linux run sudo tailscale set --operator=$USER once`，对应的就是提示词里的第 2 步。
+- **手机能打开页面，但一直卡在“正在连接”。** 用流量上网时，Tailscale 打不通直连，改走中继（DERP），往返延迟明显变高。页面能加载，但实时事件流跟不上。用 `tailscale ping <手机>` 看到 `via DERP` 就能确认。常见原因是手机在运营商 NAT 后面，或者网络规则让 Tailscale 找不到直连路线。
+- **在代理后面，Cloudflare Tunnel 也可能连不上。** `cloudflared` 报 `TLS handshake with edge error: EOF`，通常是代理干扰了隧道连接。这时可以让 Tailscale 的 UDP 流量绕过代理。前提是你清楚自己的网络规则，规则写得太宽，可能影响其他流量的线路。
+- **添加到主屏幕要用系统浏览器：** iPhone 用 Safari，Android 用 Chrome。

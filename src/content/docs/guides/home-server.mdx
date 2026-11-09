@@ -1,0 +1,120 @@
+---
+title: How to run OpenMausBot 24/7 on a home server
+description: Turn a mini PC with Ubuntu 24.04 Server into an OpenMausBot server that starts at boot and recovers from crashes. Hand it all to your AI agent over SSH, or run the commands yourself.
+verifiedOn: 0.1.146
+sidebar:
+  order: 1
+  label: Run 24/7 on a mini PC
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Figure from '../../../components/Figure.astro';
+
+When you're done, you have an OpenMausBot server that's always on: it starts at boot, restarts after crashes, and runs bots as a dedicated user on a separate machine, away from the personal files on your laptop. Routines (like the [daily Search Console report](/recipes/gsc-daily-report/)) run on time, every day.
+
+Ours is a low-power mini PC in the N100/N150 class (4 cores, 16 GB RAM, wired). That's plenty. See [where your bots should run](/concepts/where-to-run/).
+
+<Figure name="home-server" alt="Woodcut print at night: a small mini PC with a green light on a shelf, a robot on a crate keeping watch beside a lantern, and a crescent moon in the window." />
+
+## Decisions
+
+| Decide | Recommendation | Why |
+|---|---|---|
+| OS | **Ubuntu Server 24.04 LTS** | A desktop environment uses memory a server doesn't need, and OpenMausBot won't control an Ubuntu Wayland desktop for safety. Bots get their own desktop in a container; the host needs no GUI |
+| User | **Dedicated**, e.g. `bot` | Bots have that user's permissions |
+| Install | **npm into `~/.local`, pinned version** | Upgrade and rollback are one command each |
+| Network | **Wired** | Long-lived streams to your phone and browser are steadier |
+
+Install the OS, create the user, enable OpenSSH, and make sure you can `ssh <user>@<server-ip>`.
+
+## Install
+
+<Tabs>
+<TabItem label="Hand it to your agent">
+
+Paste this into Claude Code, Codex or OpenCode:
+
+```text title="Prompt"
+Set up an always-on OpenMausBot server on my Ubuntu 24.04 Server machine at <user>@<server-ip>,
+working over SSH from this computer:
+
+1. Key-based SSH with a host alias "myserver" in ~/.ssh/config. If passwordless sudo isn't set up, give me the command to run, then verify.
+2. Install Node.js 24 (NodeSource), git, curl and Docker Engine with compose; add the user to the docker group.
+3. Install openmausbot with npm into ~/.local (pin the current latest version) and put ~/.local/bin on PATH.
+4. Run `openmausbot doctor --host` and fix every FAIL as it suggests. For the browser sandbox AppArmor issue,
+   add the per-binary profile from the OpenMausBot docs instead of disabling the restriction globally.
+5. Start at boot: run `openmausbot service install`, then run the three sudo commands it prints. Install the bots' browser:
+   `sudo -H env "PATH=$PATH" openmausbot browser install --with-deps` once for system libraries, then
+   `openmausbot browser install` as this user.
+6. Open an SSH tunnel (local 8799 → server 127.0.0.1:8799), run `openmausbot pair`, and give me the link.
+7. Finish with a table: version, service state, listening ports, free disk and RAM.
+
+Rules: never print secrets in chat; back up config files before editing; don't change DNS, timezone or routing.
+```
+
+</TabItem>
+<TabItem label="Do it yourself">
+
+On the server:
+
+```sh
+# 1. Node.js 24 + Docker
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+sudo apt-get install -y nodejs git curl
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER && newgrp docker
+
+# 2. OpenMausBot, pinned
+npm install --global --prefix "$HOME/.local" openmausbot@0.1.146
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.profile && source ~/.profile
+
+# 3. Preflight: fix every FAIL
+sudo env "PATH=$PATH" openmausbot doctor --host
+
+# 4. The bots' browser: system libraries once as admin, then the browser for this user
+sudo -H env "PATH=$PATH" openmausbot browser install --with-deps
+openmausbot browser install
+
+# 5. Start at boot: this writes the unit file and prints three sudo commands; run them
+openmausbot service install
+sudo install -m 644 ~/.openmausbot/openmausbot.service /etc/systemd/system/openmausbot.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now openmausbot
+
+# 6. Pairing code (valid 5 minutes)
+openmausbot pair --label "My laptop"
+```
+
+Then on your computer open a tunnel and the pairing link:
+
+```sh
+ssh -N -L 8799:127.0.0.1:8799 <user>@<server-ip>
+```
+
+</TabItem>
+</Tabs>
+
+:::caution[Don't let your agent change the server's DNS]
+If your network routes traffic by domain, a server with different DNS from your other devices can take a different route, and some services may answer "location not supported". That's why the prompt forbids DNS changes.
+:::
+
+## Pair
+
+Open the pairing link and press **Connect**. The browser stays signed in for 30 days. Codes last 5 minutes and work once. If one expires, generate a new one on the server, or ask your AI agent to do it.
+
+{/* SCREENSHOT: pairing page (blur the code). src/assets/screenshots/home-server/pair.png */}
+
+## Check it worked
+
+In the paired page, send MausBot a message. If it replies, the setup works. You need at least one engine signed in.
+
+For a more thorough check, send this to your AI agent:
+
+```text title="Prompt"
+Check my OpenMausBot server (ssh alias "myserver"): run openmausbot doctor, confirm the systemd service is active and port 8799 is bound to 127.0.0.1 only, then use openmausbot run to get a one-sentence reply from MausBot. Give me a status table.
+```
+
+## Next steps
+
+- [How to sign in to Claude, Codex and OpenCode on a server](/guides/sign-in-engines/): get each engine signed in, easiest first.
+- [How to reach your server from your phone and laptop](/guides/remote-access/): choose between Tailscale and the hosted tunnel.

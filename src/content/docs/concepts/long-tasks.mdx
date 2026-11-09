@@ -1,0 +1,91 @@
+---
+title: Why one bot task can take an hour
+description: One task on our server ran for 60 minutes and used 11 million input tokens. The usage records show the time went into dozens of model calls and over a hundred tool runs, and the tokens came from re-sending the whole conversation at every step. Real data and what to do about it.
+sidebar:
+  order: 3
+---
+import Diagram from '../../../components/Diagram.astro';
+
+
+We once gave a bot a long analysis job. It ran for **60 minutes**, and the usage record for that turn showed **11 million input tokens**.
+
+The first guess was "the context got huge and the model slowed down". The step-by-step records say otherwise.
+
+## Where the 60 minutes went
+
+The turn ran on Gemini 3.8 Flash:
+
+| Item | Value |
+|---|---|
+| Total time | 60 minutes |
+| Model calls | about 90, about 32 minutes in total |
+| Tool runs | 178, about 39 minutes in total (the two overlap in time, so they add up to more than 60) |
+| Tool mix | 60 commands in a VM, 35 Python scripts, only 15 screen actions |
+| Context size | grew from 29 k to 355 k tokens |
+| Cumulative input | 11.04 M tokens, 10.69 M (97%) of them cache hits |
+| Estimated cost | about $1.18 |
+
+So:
+
+- It was slow because it had many steps. Every step waits for the model to decide, then for the tool to finish. A hundred-odd steps add up to an hour.
+- 11 million is not the context size. The context peaked at 355 k. The 11 million is the input of about 90 calls added together.
+
+## The same pattern on a Mac
+
+On our own Mac, one Claude Opus 5.5 turn took 16 minutes with 64 model calls and 64 tool runs:
+
+| Item | One turn on that Mac |
+|---|---|
+| Total time | 16 minutes |
+| Model calls | 64, about 6 minutes in total (median 3.9 s per call) |
+| Tool runs | 64, about 9 minutes in total (median 0.5 s per run) |
+| Context size | from 41 k to 153 k tokens |
+| Cumulative input | 5.94 M tokens, 97% of them cache hits |
+| Cost | about $3, reported by the provider itself, not estimated |
+
+Two machines, two different models, two different providers, the same pattern: the time goes to the number of calls. On this Mac the median call took 3.9 seconds, and the turn made 64 of them plus 64 tool runs. That is how the time adds up. The tools can even outlast the model: a few runs took close to two minutes each.
+
+## Why tokens pile up into the millions
+
+Within one turn, every model call re-sends **the whole conversation so far**:
+
+This chart shows the context each model call in that turn actually sent, from the usage records:
+
+<Diagram name="context-growth" alt="Bar chart of 88 model calls in one turn: the context sent per call grows from 29 thousand tokens at call 1 to 355 thousand at call 88." />
+
+The context grows each step and is re-sent each step, so cumulative input ends up far larger than the final context. Most of the repeated part is cached: 97% of this turn's input was cache hits, which are billed far below normal input, so the turn cost about $1.18 at API prices.
+
+## Does a bigger context make each call slower?
+
+Not noticeably in our data. These are the **median times per model call** on our server over two days, grouped by context size (a call's time covers reading the context and writing the reply):
+
+| Context size | DeepSeek V4.1 Flash (OpenCode Go) | Gemini 3.8 Flash |
+|---|---|---|
+| under 50 k | 4.9 s (22 calls) | 15.0 s (27 calls) |
+| 50–100 k | 14.3 s (23 calls) | 8.9 s (143 calls) |
+| 100–200 k | 13.4 s (45 calls) | 7.3 s (243 calls) |
+| 200–300 k | 16.7 s (16 calls) | 8.0 s (170 calls) |
+| 300–400 k | 12.4 s (16 calls) | 9.7 s (59 calls) |
+
+A call usually takes 5 to 17 seconds and does not get several times slower as the context grows. The slowest calls took 1 to 2.5 minutes and were spread across all context sizes rather than clustered at the large end.
+
+## Making tasks faster and cheaper
+
+| Do this | Why it works |
+|---|---|
+| **One job, one conversation** | A new conversation starts small, so each step re-sends less and cumulative tokens stay low |
+| **Split big jobs** | Fewer steps means less waiting, and a failure doesn't restart everything |
+| **Have the bot turn repeat work into a script** | Our daily GSC report takes 19 steps and under 3 minutes per run because the heavy lifting is in a script |
+| **No computer for bots that don't need a screen** | Fewer tools means fewer detours |
+| **Low reasoning effort for everyday chat** | Fewer thinking tokens per step |
+
+## Let AI take a look
+
+```text title="Prompt"
+Read the last two days of usage records on my OpenMausBot server (ssh alias "myserver"):
+the jsonl files in ~/.openmausbot/usage/ are per turn (input, cachedInput, contextTokens, steps, tools, start and end),
+and usage/spans/ has start and end times for each model call (kind=step) and tool run (kind=tool).
+List the 10 longest turns: bot, model, total time, model calls and their total time, tool runs and their total time,
+final context, cumulative input and cache hit rate. Then tell me which jobs to split, restart in a new conversation,
+or turn into a script. Don't change anything.
+```

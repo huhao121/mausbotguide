@@ -1,0 +1,190 @@
+---
+/**
+ * Language switcher: a disclosure button that opens a list of real links.
+ * Replaces Starlight's native <select> (on macOS it pops up over the button
+ * instead of dropping down, and its options are not crawlable links).
+ * Pattern: WAI-ARIA disclosure navigation. Opens below the button, aligned to
+ * its right edge; flips upward only when there is no room below.
+ */
+import { Icon } from '@astrojs/starlight/components';
+import { locales } from '../locales.mjs';
+
+const codes = Object.keys(locales);
+const current = Astro.locals.starlightRoute.locale ?? 'root';
+const prefixed = codes.filter((c) => c !== 'root');
+
+/** The current page's path without its locale prefix, e.g. "/zh/start/" -> "/start/". */
+function basePath(pathname: string): string {
+	for (const c of prefixed) {
+		if (pathname === `/${c}` || pathname === `/${c}/`) return '/';
+		if (pathname.startsWith(`/${c}/`)) return pathname.slice(c.length + 1);
+	}
+	return pathname;
+}
+const base = basePath(Astro.url.pathname);
+const hrefFor = (code: string) => (code === 'root' ? base : `/${code}${base}`);
+const menuId = `lang-menu-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+{
+	codes.length > 1 && (
+		<mbg-lang-select>
+			<button
+				type="button"
+				class="trigger"
+				aria-expanded="false"
+				aria-controls={menuId}
+				aria-label={Astro.locals.t('languageSelect.accessibleLabel')}
+			>
+				<Icon name="translate" size="1rem" />
+				<span>{locales[current]?.label}</span>
+				<Icon name="down-caret" size="0.875rem" class="caret" />
+			</button>
+			<ul id={menuId} class="menu" hidden>
+				{codes.map((code) => (
+					<li>
+						<a
+							href={hrefFor(code)}
+							hreflang={locales[code]!.lang}
+							lang={locales[code]!.lang}
+							aria-current={code === current ? 'true' : undefined}
+						>
+							{locales[code]!.label}
+							{code === current && <Icon name="approve-check" size="1rem" />}
+						</a>
+					</li>
+				))}
+			</ul>
+		</mbg-lang-select>
+	)
+}
+
+<script>
+	class LangSelect extends HTMLElement {
+		connectedCallback() {
+			const trigger = this.querySelector<HTMLButtonElement>('.trigger')!;
+			const menu = this.querySelector<HTMLUListElement>('.menu')!;
+			const links = () => [...menu.querySelectorAll<HTMLAnchorElement>('a')];
+
+			const open = (focusFirst = false) => {
+				menu.hidden = false;
+				trigger.setAttribute('aria-expanded', 'true');
+				// Drop down by default; flip up only if the menu would leave the viewport.
+				menu.classList.remove('up');
+				const r = menu.getBoundingClientRect();
+				if (r.bottom > window.innerHeight - 8 && trigger.getBoundingClientRect().top > r.height + 8) {
+					menu.classList.add('up');
+				}
+				if (focusFirst) (links().find((a) => a.hasAttribute('aria-current')) ?? links()[0])?.focus();
+			};
+			const close = (returnFocus = false) => {
+				menu.hidden = true;
+				trigger.setAttribute('aria-expanded', 'false');
+				if (returnFocus) trigger.focus();
+			};
+
+			trigger.addEventListener('click', () => (menu.hidden ? open() : close()));
+			trigger.addEventListener('keydown', (e) => {
+				if (e.key === 'ArrowDown') {
+					e.preventDefault();
+					open(true);
+				}
+			});
+			menu.addEventListener('keydown', (e) => {
+				const items = links();
+				const i = items.indexOf(document.activeElement as HTMLAnchorElement);
+				if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+					e.preventDefault();
+					const step = e.key === 'ArrowDown' ? 1 : -1;
+					items[(i + step + items.length) % items.length]?.focus();
+				}
+			});
+			this.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape' && !menu.hidden) close(true);
+			});
+			document.addEventListener('click', (e) => {
+				if (!menu.hidden && !this.contains(e.target as Node)) close();
+			});
+			this.addEventListener('focusout', (e) => {
+				if (!menu.hidden && !this.contains(e.relatedTarget as Node)) close();
+			});
+		}
+	}
+	customElements.define('mbg-lang-select', LangSelect);
+</script>
+
+<style>
+	mbg-lang-select {
+		position: relative;
+		display: inline-block;
+	}
+	.trigger {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		height: 2rem;
+		padding: 0 0.625rem;
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 999px;
+		background: transparent;
+		color: var(--sl-color-gray-2);
+		font: inherit;
+		font-size: var(--sl-text-sm);
+		cursor: pointer;
+	}
+	.trigger:hover {
+		color: var(--sl-color-white);
+	}
+	.trigger:focus-visible,
+	.menu a:focus-visible {
+		outline: 2px solid var(--sl-color-text-accent);
+		outline-offset: 1px;
+	}
+	.trigger[aria-expanded='true'] :global(.caret) {
+		transform: rotate(180deg);
+	}
+	.menu {
+		position: absolute;
+		top: calc(100% + 0.375rem);
+		right: 0;
+		z-index: 100;
+		min-width: 9rem;
+		margin: 0;
+		padding: 0.25rem;
+		list-style: none;
+		background: var(--sl-color-bg-nav);
+		border: 1px solid var(--sl-color-gray-5);
+		border-radius: 0.5rem;
+		box-shadow: var(--sl-shadow-md);
+	}
+	.menu.up {
+		top: auto;
+		bottom: calc(100% + 0.375rem);
+	}
+	.menu[hidden] {
+		display: none;
+	}
+	.menu li {
+		margin: 0;
+	}
+	.menu a {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding: 0.375rem 0.625rem;
+		border-radius: 0.375rem;
+		color: var(--sl-color-gray-2);
+		font-size: var(--sl-text-sm);
+		text-decoration: none;
+	}
+	.menu a:hover,
+	.menu a:focus-visible {
+		background: var(--sl-color-gray-6);
+		color: var(--sl-color-white);
+	}
+	.menu a[aria-current='true'] {
+		color: var(--sl-color-white);
+		font-weight: 600;
+	}
+</style>

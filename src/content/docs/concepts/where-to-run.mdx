@@ -1,0 +1,51 @@
+---
+title: Where should your bots run?
+description: Your Mac, a mini PC at home, MausBot Cloud or a VPS. How to choose where OpenMausBot runs 24/7, with the trade-offs we measured.
+verifiedOn: 0.1.146
+sidebar:
+  order: 2
+---
+
+import Figure from '../../../components/Figure.astro';
+
+With OpenMausBot, **all your bots live on one machine**: the machine that runs the server also runs every agent process
+and holds every sign-in. Each server is its own workspace. So pick that machine first. Everything else follows from it.
+
+<Figure name="where-to-run" alt="A hand-drawn map: a robot with a suitcase stands at a blank signpost, and four dashed paths lead to a laptop, a fenced mini PC, a tethered cloud, and a rented apartment block on a hill." />
+
+## The options
+
+| | Your Mac | Mini PC at home (Linux) | MausBot Cloud | VPS |
+|---|---|---|---|---|
+| Uses the subscriptions you are signed into | **Yes, immediately** | After signing in on the server | After signing in | After signing in |
+| Runs when your laptop is closed | Only if the Mac never sleeps | **Yes** | **Yes** | **Yes** |
+| Isolation from your personal files | **No**: bots run as you | Yes, separate user and machine | Yes | Yes |
+| Desktop-app extras (dictation and voice, controlling this computer's desktop) | Yes | No | No | No |
+| Cost | Free | Hardware once (a low-power mini PC is enough) | From $15 a month plus tax, shown in the app | From a few dollars a month |
+| Effort | Lowest | One-time setup, an agent can do it | Lowest | Medium |
+
+## What we found running both
+
+We run the same setup on a Mac and on a low-power Linux mini PC.
+
+- The mini PC is fast enough. The models run in the cloud. The server mostly starts CLI processes and waits.
+  Ours runs many bots at once, and a single model call usually takes 5 to 17 seconds. When a task feels slow,
+  check [the number of steps](/concepts/long-tasks/) first.
+- You do not need a big local-AI box. Unless you want to run open models locally, the server only starts CLI
+  processes and a browser. 4 cores and 8–16 GB are plenty. Disk matters more than CPU if bots use a desktop VM.
+- The Mac's biggest advantage is sign-ins. Claude and Codex were already logged in, so bots worked on the first
+  message. On the server, some engines needed extra steps (see [sign in to engines](/guides/sign-in-engines/)).
+- Its biggest drawback is isolation. Bots' shells run as your macOS user: they can read `~/.ssh`, your browser
+  profile, everything in your home folder. On the mini PC they run as a dedicated user on a separate machine.
+
+## Our recommendation
+
+- **Trying it out:** install the desktop app on the computer you use, chat with a bot, see if it clicks.
+- **Keeping it:** move the home to a dedicated always-on Linux box (a mini PC or a VPS), and use the Mac and your
+  phone as windows onto it. You get isolation, a machine bots can't break anything important on, and 24/7 routines.
+- **No hardware, no admin:** MausBot Cloud. It includes no AI usage. You still connect your own subscriptions.
+
+## Next steps
+
+- Try it on your Mac first: [15-minute quickstart](/start/)
+- Keeping it: [run OpenMausBot 24/7 on a mini PC](/guides/home-server/)

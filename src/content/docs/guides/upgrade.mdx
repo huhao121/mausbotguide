@@ -1,0 +1,63 @@
+---
+title: How to upgrade, back up and roll back safely
+description: Upgrade a self-hosted OpenMausBot safely (back up, pin the version, verify, roll back with one command), and check whether the new release fixes your problem first.
+verifiedOn: 0.1.146
+sidebar:
+  order: 5
+  label: Upgrade and roll back
+---
+
+import Figure from '../../../components/Figure.astro';
+
+OpenMausBot releases almost every day. You don't need every release. Upgrade when a release fixes something you hit
+or adds something you want.
+
+<Figure name="upgrade" alt="Retro mountaineering poster: a robot steps up to a higher ledge, tied by an orange rope to an anchor on the ledge below, where its backpack is clipped safely." />
+
+## Before you start
+
+- An OpenMausBot server you can reach with `ssh myserver` from this computer (see [how to run OpenMausBot 24/7 on a home server](/guides/home-server/)), installed with npm at a pinned version as in that guide.
+
+Below, `myserver` is the server's SSH alias and anything in `<…>` is a value you replace.
+
+## Decisions
+
+- Pin versions. Install a specific version, never "latest". That makes going back to an older version easy.
+- Back up first. Your bots, conversations and memory live in `~/.openmausbot`. Engine sign-ins live in each
+  CLI's own folder (such as `~/.codex` or `~/.claude`) and are not touched by an upgrade. The backup skips the
+  re-downloadable `tools` folder and stays small (ours is about 37 MB).
+
+## Hand this to your agent
+
+```text title="Prompt"
+Check whether my OpenMausBot server (ssh alias "myserver") should be upgraded, and upgrade it safely if I agree.
+
+1. Show the installed version and the latest release on npm. Summarize the GitHub release notes in between,
+   highlighting anything about the engines and features I use (ask me if unsure).
+2. Wait for my go-ahead. Then back up ~/.openmausbot to ~/omb-backup-<date>.tgz, excluding the tools folder.
+3. `npm install --global --prefix "$HOME/.local" openmausbot@<new version>`, restart the service, and wait until
+   it is active and /api/health answers.
+4. Verify: `openmausbot doctor`, number of bots unchanged, paired sessions still listed, my main engine's model
+   list loads, remote access URL still returns 200.
+5. Give me the exact rollback command for the previous version.
+```
+
+## Check it worked
+
+Refresh any open browser or phone page so it loads the new version, then send any bot a message and check that it replies normally.
+
+## Roll back
+
+If something goes wrong, send this to your AI agent:
+
+```text title="Prompt"
+Roll my OpenMausBot server (ssh alias "myserver") back to <previous version>: reinstall that version with npm to ~/.local, restart the openmausbot service, and tell me the result once the service is active.
+```
+
+Data does not need restoring for a normal rollback. The backup is for when something went really wrong.
+
+## A real upgrade
+
+Our upgrade from 0.1.143 to 0.1.146 kept every bot and paired device, and it fixed a bug
+we had worked around by hand: OpenCode models not showing up until a background service was restarted. Reading the
+release notes first is how we found that out.

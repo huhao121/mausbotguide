@@ -1,0 +1,85 @@
+---
+title: How to reach your server from your phone and laptop
+description: Replace the SSH tunnel with Tailscale (private HTTPS) or a tunnel (public HTTPS + pairing code), pair the desktop app and your phone, and what to check when a connection is slow.
+verifiedOn: 0.1.146
+sidebar:
+  order: 2
+  label: Reach it from phone and laptop
+---
+import Diagram from '../../../components/Diagram.astro';
+
+
+## What you get
+
+A stable HTTPS address for your server that works on every device, so you can drop the SSH tunnel, install the
+desktop app, and chat with your bots from your phone.
+
+## Before you start
+
+- An OpenMausBot server you can reach with `ssh myserver` from this computer (see [how to run OpenMausBot 24/7 on a home server](/guides/home-server/)).
+- A Tailscale account (free for personal use) if you pick Tailscale.
+
+Below, `myserver` is the server's SSH alias and anything in `<…>` is a value you replace.
+
+## Decisions
+
+| | Tailscale (`--tailscale`) | OpenMausBot tunnel (`--tunnel`) | Your own domain (`--domain` or `--public-url`) |
+|---|---|---|---|
+| Who can reach it | Only your devices on your tailnet | Anyone with a pairing code | Anyone with a pairing code |
+| Needs | Tailscale on server and devices | An OpenMausBot account (email code) | A domain on Cloudflare |
+| Phone needs an app | Tailscale | No | No |
+| Best for | **Privacy** | Fastest public setup | Public address you control |
+
+We recommend starting with Tailscale. Nothing is exposed to the internet, and it is free for personal use.
+
+<Diagram name="remote-access" alt="Your laptop and phone reach your server either over Tailscale, a private network only your devices can join, or through the OpenMausBot managed tunnel, a public https address that still requires a pairing code. Port 8799 on the server stays private, and every device pairs once." />
+
+## Hand this to your agent
+
+```text title="Prompt"
+On my OpenMausBot server (ssh alias "myserver"), switch remote access from an SSH tunnel to Tailscale:
+
+1. Install Tailscale and run `tailscale up --hostname=<name>`. Give me the login link it prints and wait.
+2. After I confirm, run `sudo tailscale set --operator=<server user>` so OpenMausBot can manage Tailscale
+   without root, then `openmausbot service install --tailscale` and run the commands it prints to reload and restart the service.
+3. Verify from this computer: https://<name>.<tailnet>.ts.net/api/health returns {"app":"openmausbot"...}.
+4. Create pairing links with `openmausbot pair --label "<device>" --public-url https://<name>.<tailnet>.ts.net`,
+   one for this computer and one for my phone, and give them to me one at a time (they last 5 minutes).
+5. Stop the old SSH tunnel process on this computer.
+
+Do not change the server's DNS, routes or exit node.
+```
+
+## Only you can do this
+
+1. **Open the Tailscale login link** and approve the machine.
+2. In the Tailscale admin console: **DNS → HTTPS Certificates → Enable** (OpenMausBot needs a certificate), and
+   on the machine, **Disable key expiry** (otherwise it drops off after 180 days).
+3. **Install Tailscale on your phone** and sign in to the same account.
+4. **Open each pairing link** on its device. In the desktop app, use **Server → Add Server from Copied Pairing
+   Link…** and paste the link. Don't choose **Make &lt;server&gt; my home** unless you mean to move all your bots there.
+
+{/* SCREENSHOT: Tailscale admin, HTTPS Certificates toggle. src/assets/screenshots/remote-access/ts-https.png */}
+{/* SCREENSHOT: desktop app, Server menu > Add Server from Copied Pairing Link. src/assets/screenshots/remote-access/app-add-server.png */}
+
+## Check it worked
+
+On any device on your tailnet, open `https://<name>.<tailnet>.ts.net/api/health`. If it returns a response, the connection works. Paired browsers, apps and phones are listed under **Settings → Remote access → Paired devices**.
+
+What a phone can do depends on how it is paired. A phone browser paired with a code gets the same web app
+as your computer. The native iOS app, and anything paired with client-only access, can chat, answer approval cards and read.
+creating bots, changing models and connecting apps stay in the web app. Neither gets alerts once the app is closed:
+the web app has no push notifications, and the iOS app alerts only while open or briefly in the background.
+
+## Where it goes wrong
+
+- **The service crash-looped right after switching.** The log said `Tailscale refused: on Linux run sudo tailscale
+  set --operator=$USER once`. That's step 2 of the prompt.
+- **The phone loaded the page but got stuck on "connecting".** On mobile data, Tailscale could not open a direct
+  path and fell back to a relay (DERP) with much higher round-trip times. Static files arrived. The live event stream did
+  not keep up. `tailscale ping <phone>` showing `via DERP` confirms it. Common causes are carrier NAT on the phone
+  or network rules that stop Tailscale from finding a direct route.
+- **A Cloudflare Tunnel may not work behind a proxy.** `cloudflared` can fail with `TLS handshake with edge error:
+  EOF` when a proxy interferes with the tunnel connection. In that case, let Tailscale's UDP traffic bypass the proxy.
+  Only do that if you understand your network rules: a too-broad rule can change how your other traffic is routed.
+- **Add it to the home screen from Safari (iPhone) or Chrome (Android).** Use the system browser, not an app's built-in one.

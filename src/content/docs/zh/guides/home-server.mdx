@@ -1,0 +1,119 @@
+---
+title: 如何用家里的小主机 24 小时跑 OpenMausBot
+description: 把一台迷你主机装成 Ubuntu 24.04 Server，变成开机自启、崩溃自动重启的 OpenMausBot 服务器。可以全部交给 AI Agent 通过 SSH 完成，也可以照着命令自己做。
+verifiedOn: 0.1.146
+sidebar:
+  order: 1
+  label: 用小主机 24 小时运行
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+import Figure from '../../../../components/Figure.astro';
+
+做完这篇，你会有一台 24 小时在线的 OpenMausBot 服务器：开机自启、崩溃自动重启，Bot 用专用账号跑在单独的机器上，碰不到你笔记本里的个人文件。定时任务（比如[每日 GSC 日报](/zh/recipes/gsc-daily-report/)）从此每天准时执行。
+
+我们用的是一台 N100/N150 这一档的低功耗迷你主机（4 核、16 GB 内存、有线网络），性能绰绰有余，请参阅[Bot 应该跑在哪里](/zh/concepts/where-to-run/)。
+
+<Figure name="home-server" alt="夜色中的木刻版画：架子上一台亮着绿灯的迷你主机，机器人坐在木箱上守着，脚边一盏提灯，窗外一弯新月。" />
+
+## 先做决定
+
+| 决策项 | 推荐 | 原因 |
+|---|---|---|
+| 系统 | **Ubuntu Server 24.04 LTS** | 桌面环境会白白占用内存，而且 OpenMausBot 出于安全考虑不会操控 Ubuntu 的 Wayland 桌面。Bot 的桌面跑在容器里，宿主机不需要图形界面 |
+| 运行账号 | **专用用户**，比如 `bot` | Bot 拥有这个账号的全部权限 |
+| 安装方式 | **npm 装到 `~/.local`，固定版本号** | 升级、回滚都是一条命令 |
+| 网络 | **有线** | 到手机和浏览器的长连接更稳 |
+
+装好系统、创建好用户、安装时勾选 OpenSSH，确认你的电脑能 `ssh <用户>@<服务器IP>` 登录。
+
+## 安装
+
+<Tabs>
+<TabItem label="交给 AI Agent">
+
+把下面这段复制给 Claude Code、Codex 或 OpenCode：
+
+```text title="提示词"
+在我的 Ubuntu 24.04 Server 机器 <用户>@<服务器IP> 上搭一台 24 小时在线的 OpenMausBot 服务器，
+从这台电脑通过 SSH 操作：
+
+1. 配好 SSH 密钥登录，在 ~/.ssh/config 里加别名 "myserver"。还没有免密码 sudo 的话，把我要执行的命令给我，执行后再验证。
+2. 安装 Node.js 24（NodeSource）、git、curl、Docker Engine（含 compose 插件），把用户加进 docker 组。
+3. 用 npm 把 openmausbot 装到 ~/.local（固定为当前最新版本号），确保 ~/.local/bin 在 PATH 里。
+4. 运行 `openmausbot doctor --host`，按它给出的方法修好每个 FAIL。浏览器沙箱的 AppArmor 问题，
+   按 OpenMausBot 文档给单个程序加 profile，不要全局关闭限制。
+5. 开机自启：运行 `openmausbot service install`，再执行它打印出来的三条 sudo 命令。装 Bot 用的浏览器：先用
+   `sudo -H env "PATH=$PATH" openmausbot browser install --with-deps` 装系统依赖，再以这个用户运行 `openmausbot browser install`。
+6. 开一条 SSH 隧道（本地 8799 → 服务器 127.0.0.1:8799），运行 `openmausbot pair` 把配对链接给我。
+7. 最后给我一张表：版本、服务状态、监听端口、剩余磁盘和内存。
+
+规则：不在对话里打印任何密钥；改配置前先备份；不要改 DNS、时区和网络路由。
+```
+
+</TabItem>
+<TabItem label="自己动手">
+
+在服务器上执行：
+
+```sh
+# 1. 基础环境：Node.js 24 + Docker
+curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+sudo apt-get install -y nodejs git curl
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER && newgrp docker
+
+# 2. 安装 OpenMausBot（固定版本号）
+npm install --global --prefix "$HOME/.local" openmausbot@0.1.146
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.profile && source ~/.profile
+
+# 3. 环境检查：逐条修好 FAIL
+sudo env "PATH=$PATH" openmausbot doctor --host
+
+# 4. Bot 用的浏览器：先用管理员装系统依赖，再给当前用户装浏览器
+sudo -H env "PATH=$PATH" openmausbot browser install --with-deps
+openmausbot browser install
+
+# 5. 开机自启：这条命令只写出服务文件，并打印三条 sudo 命令，照着执行
+openmausbot service install
+sudo install -m 644 ~/.openmausbot/openmausbot.service /etc/systemd/system/openmausbot.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now openmausbot
+
+# 6. 生成配对码（5 分钟有效）
+openmausbot pair --label "My laptop"
+```
+
+然后在你的电脑上开一条隧道，用浏览器打开配对链接：
+
+```sh
+ssh -N -L 8799:127.0.0.1:8799 <用户>@<服务器IP>
+```
+
+</TabItem>
+</Tabs>
+
+:::caution[别让 Agent 改服务器的 DNS]
+如果你的网络按域名分流，服务器的 DNS 一旦和其他设备不一致，线路就可能不同，有些服务会提示「所在地区不受支持」。所以提示词里明确禁止改 DNS。
+:::
+
+## 配对
+
+在浏览器里打开配对链接，点 **Connect**，浏览器会保持登录 30 天。配对码只有 5 分钟有效、只能用一次，过期了就在服务器上重新生成一个，交给 AI Agent 做也行。
+
+{/* 截图：配对页面（把配对码打码）。src/assets/screenshots/home-server/pair.png */}
+
+## 验证
+
+在配对好的页面里给 MausBot 发一句话，能收到回复就通了（前提是至少登录了一个引擎）。
+
+想检查得细一点，把这段发给你的 AI Agent：
+
+```text title="提示词"
+检查我的 OpenMausBot 服务器（ssh 别名 "myserver"）：运行 openmausbot doctor，确认 systemd 服务是 active，8799 端口只绑定在 127.0.0.1，再用 openmausbot run 让 MausBot 回一句话。最后给我一张状态表。
+```
+
+## 后续步骤
+
+- [如何在服务器上登录 Claude / Codex / OpenCode](/zh/guides/sign-in-engines/)：从最容易的引擎开始，逐个登录好。
+- [如何从手机和笔记本连上服务器](/zh/guides/remote-access/)：在 Tailscale 和托管隧道之间选一条路。

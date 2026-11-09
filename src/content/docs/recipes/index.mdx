@@ -1,0 +1,32 @@
+---
+title: "Use cases: what bots can do for you"
+description: Real OpenMausBot use cases from bots we actually run, including a daily analytics report and topic tracking. Each use case covers what to tell the bot, what only you can do, and the pitfalls to avoid.
+sidebar:
+  order: 0
+  label: All use cases
+---
+
+import { LinkCard } from '@astrojs/starlight/components';
+
+Every use case here comes from a bot we actually ran. Each one shows:
+
+- **The result**: a screenshot or the real conversation.
+- **What to tell the bot**: a request you can paste.
+- **What only you can do**: sign-ins and clicks, usually two or three.
+- **Why it works this way**: the key trade-offs and pitfalls.
+
+## Start here
+
+<LinkCard title="Claude, Codex and Gemini in one chat" description="One subscription per bot: cheap models daily, strong ones for heavy lifting." href="/recipes/all-subscriptions/" />
+<LinkCard title="Watch and approve from your phone" description="It runs at home; you check progress, approve cards and press Stop anywhere." href="/recipes/phone-remote-control/" />
+
+## Automation
+
+<LinkCard title="A daily Search Console report" description="Multiple sites, several Google accounts, one chat report every morning at 9." href="/recipes/gsc-daily-report/" />
+<LinkCard title="Track the hottest posts on X" description="The top posts on a topic every week, with links, and silence when nothing changed." href="/recipes/x-trend-digest/" />
+
+## Three habits for writing a good brief
+
+1. Demo first, real data second. Have the bot build the result on fake data, settle the format, then connect real accounts.
+2. Write acceptance criteria into the request. "Every item needs a link", "tell me when it fails", "stay quiet if nothing changed" work better than correcting it afterwards.
+3. Save what worked as a skill. Say "save how we did this as a skill" and the next similar job follows the same path.

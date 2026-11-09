@@ -1,0 +1,52 @@
+---
+title: Track the hottest posts on X for a topic
+description: Have an OpenMausBot bot find the most-discussed X (Twitter) posts on a topic, group them by camp, include links, and deliver it weekly.
+verifiedOn: 0.1.146
+sidebar:
+  order: 5
+  label: Track hot posts on X
+---
+
+import Figure from '../../../components/Figure.astro';
+
+Want to know what people in a field are talking about without scrolling X every day? Give it to a bot.
+
+<Figure name="x-trend" alt="Two-colour risograph print: a storm of blank post cards on the left, a robot with a magnifying glass sorting them, and four tied stacks on the right, each thread pinned to its source." />
+
+## A real conversation
+
+We asked a research bot (Gemini 3.8 Flash with web search):
+
+```text
+Who on X is talking about <a topic>? Find me the five most popular posts.
+```
+
+It first sorted the people in the conversation into four camps, then listed five representative posts.
+
+But the first version had no links. Only after "where are the links?" did it add each author's profile, product account and post URL.
+
+## Make it a weekly routine
+
+Put that lesson into the request and schedule it:
+
+```text title="Request for the bot"
+Every Monday at 9:00, find the 5 most-discussed X posts about "<your topic>" from the past 7 days:
+- Start with two or three sentences on the main threads or camps;
+- For each post: author (with profile link), one-line takeaway, post link;
+- Leave out anything you can't link to;
+- If nothing is new since last week, reply only "Nothing new this week."
+```
+
+Two lines matter most:
+
+- **"Leave out anything you can't link to."** The typical research-bot failure is a polished summary you can't verify. Making links mandatory beats asking afterwards.
+- **"Reply only … if nothing is new."** Scheduled jobs must not spam you.
+
+## Model and tools
+
+- Searching and summarizing doesn't need a strong model. Cheap and fast is fine.
+- Use **web search or the browser tool, not a computer.** A browser returns page text directly, while a computer has to click and look its way through, which takes more steps. See [why one task can take an hour](/concepts/long-tasks/).
+
+## Next steps
+
+- [All use cases](/recipes/): see what else a bot can do for you.

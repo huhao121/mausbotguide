@@ -1,0 +1,80 @@
+---
+title: 15 分钟让第一个 Bot 替你干活
+description: 在 Mac 上安装 OpenMausBot，直接用你已经登录的 Claude 或 Codex，从第一句对话到第一个定时任务，一步一个看得见的结果。
+verifiedOn: 0.1.146
+sidebar:
+  order: 1
+  label: 快速入门
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Figure from '../../../../components/Figure.astro';
+
+跟着这篇，你会在 Mac 上装好 OpenMausBot，和 Bot 说上第一句话，再交给它一件实际要做的事：**明天早上 9 点，把 Hacker News 上最热的 5 条新闻用中文总结后发给你。**
+
+你需要：一台 Mac，以及 Claude（Pro 或 Max）或 ChatGPT 订阅。如果这台 Mac 上已经登录了 Claude Code 或 Codex，最省事。
+
+<Steps>
+
+1. **安装 App**
+
+   从 [GitHub Releases](https://github.com/milind-soni/OpenMausBot/releases/latest) 下载对应芯片的 `.dmg`，拖进「应用程序」。也可以让你的 AI Agent 来做：
+
+   ```text title="提示词"
+   从 milind-soni/OpenMausBot 的最新 GitHub Release 下载适合这台 Mac 芯片的 .dmg，
+   用 spctl --assess 确认已签名并公证，装到 /Applications 并打开。
+   ```
+
+   打开后你会看到一个类似聊天软件的界面，左边有一个叫 **MausBot** 的联系人。
+
+2. **连接你的 AI**
+
+   首次启动时，它会请你连接一个 AI（OpenMausBot 里叫「模型提供方」，本站称为「引擎」）。选你已经在用的 Claude 或 Codex：本机已经登录的话直接沿用。没登录的话，会让你在它们的官网上登录。不需要注册新账号。
+
+   {/* 截图：首次启动时连接 AI 的界面。src/assets/screenshots/start/engines.png */}
+
+3. **说第一句话**
+
+   点左边的 **MausBot**，发送：
+
+   ```text
+   用一句话介绍你自己：你用的是哪个模型，能帮我做什么？
+   ```
+
+   几秒后它会回复，并告诉你它背后跑的是哪个模型。到这一步，整个流程就通了：App → 你本机的 `claude` / `codex` 进程 → 模型 → 返回。
+
+4. **交给它一件实际的活**
+
+   接着发送：
+
+   ```text
+   每天早上 9 点（按我的时区），打开 news.ycombinator.com，把最热的 5 条用中文各总结一句，
+   附上原文链接发给我。先现在跑一次给我看。
+   ```
+
+   它会先现场跑一次，把 5 条总结发给你。然后给自己建一个定时任务。
+
+   {/* 截图：聊天里的 5 条中文总结。src/assets/screenshots/start/first-digest.png */}
+
+5. **确认定时任务建好了**
+
+   点左侧的 **自动化**（闪电图标），可以看到一条每天 9:00 的任务。点开还能看到下次运行的时间，也可以手动立刻运行一次。
+
+</Steps>
+
+这样就搞定了。现在你有一个**每天自动干活、有结果才找你**的 Bot。明天早上 9 点，你会在 MausBot 的对话里收到第一份简报。
+
+:::caution[在 Mac 上，Bot 拥有和你一样的权限]
+新建的 Bot 默认是 **完全访问**：执行命令不会先问你，而且以你本人的 macOS 账号运行，能读到你的个人文件。想让它动手前先问你，到 **机器人设置 → 权限** 里改成 **请求批准**，各档的区别见[审批级别](/zh/concepts/approval-levels/)。打算长期用的话，建议把 Bot 搬到[一台单独的服务器](/zh/guides/home-server/)上。
+:::
+
+:::note[Mac 合上盖子或睡眠时，定时任务不会跑]
+定时任务只在那台机器开着时运行。想 24 小时稳定运行，请参阅[Bot 应该跑在哪里](/zh/concepts/where-to-run/)。
+:::
+
+<Figure name="quickstart" alt="黑色墨线手绘：一台打开的笔记本，空白屏幕中央亮着一个绿点，旁边一个小机器人举起双拳，安静地庆祝。" />
+
+## 后续步骤
+
+- [每天自动推送的 GSC 数据日报](/zh/recipes/gsc-daily-report/)：多账号、多个站点的数据，每天 9 点合成一份日报推到飞书群。
+- [用家里的小主机让 Bot 24 小时在线](/zh/guides/home-server/)：开机自启、崩溃自动重启，合上笔记本也照常跑。

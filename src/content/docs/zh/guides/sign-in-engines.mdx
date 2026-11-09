@@ -1,0 +1,76 @@
+---
+title: 如何在服务器上登录 Claude、Codex、OpenCode
+description: 怎么让没有显示器的 OpenMausBot 服务器用上你的 Claude、Codex、OpenCode（Zen/Go）、Kimi、Antigravity，按无界面登录的难易排序；以及怎么安全地把 Mac 上的登录搬过去。
+verifiedOn: 0.1.146
+sidebar:
+  order: 3
+  label: 在服务器上登录引擎
+---
+
+import Figure from '../../../../components/Figure.astro';
+import Diagram from '../../../../components/Diagram.astro';
+
+引擎就是 Bot 背后实际运行的 Agent CLI：`claude`、`codex`、`opencode` 等等。在服务器上，每个引擎都要**在服务器上**单独登录，因为进程在那里运行。CLI 可以在 **设置 → 模型提供方** 里一键安装（装在 `~/.openmausbot/tools`），也可以自己用 npm 装。装好后都要在服务器上登录。
+
+<Figure name="sign-in-engines" alt="层叠剪纸画：机器人扛着一把大钥匙，从发光的手机走向一台没有屏幕、只有一道窄缝的服务器，腰间还挂着五把形状各异的钥匙。" />
+
+## 前提条件
+
+- 一台 OpenMausBot 服务器，这台电脑能用 `ssh myserver` 登录（见[如何用家里的小主机 24 小时跑 OpenMausBot](/zh/guides/home-server/)）。
+- 你要接入的每个引擎的订阅账号或 API key。
+
+下文的 `myserver` 是服务器的 SSH 别名，`<…>` 是要换成你自己的值。
+
+## 先做决定：先接入哪个引擎
+
+按在没有显示器的机器上登录的难易程度排序：
+
+| 引擎 | 登录方式 | 无界面登录难度 | 前提 |
+|---|---|---|---|
+| **OpenCode** | API key，或者搬现有的登录 | 简单 | OpenCode Go/Zen；什么都没有也行（有免费模型） |
+| **Codex** | 设备码（在网页上输一个码） | 简单 | ChatGPT 订阅 |
+| **Kimi** | 设备码 | 简单 | Kimi 账号 |
+| **DeepSeek Harness** | API key | 简单 | DeepSeek API key（按量计费） |
+| **Claude Code** | 打开链接，把授权码粘回来 | 中等 | Claude Pro/Max 账号 |
+| **Antigravity（Gemini）** | 浏览器登录，把回调地址粘回来 | 较难 | Google AI Pro/Ultra |
+
+建议先接一个简单的引擎（OpenCode 或 Codex），发一条消息把流程跑通，再去接麻烦的。
+
+OpenCode 还有免登录的免费模型，用来测试流程不错，正式干活就别用了。
+
+<Diagram name="signin-spectrum" alt="服务器上的四种登录方式，从易到难：设备码（Codex、Kimi）、API key（OpenCode、DeepSeek）、打开链接粘授权码（Claude Code）、浏览器登录粘回调地址（Antigravity）。" />
+
+## 交给 AI Agent
+
+```text title="提示词"
+在我的 OpenMausBot 服务器（ssh 别名 "myserver"）上把引擎登录好。我要的是：<引擎，比如 OpenCode Go 和 Codex>。
+
+- 如果某个引擎我已经在这台电脑上登录过（用 opencode auth list、codex login status、claude auth status 检查），
+  就通过管道把凭据搬到服务器上，保证它不会被打印出来，也不会留在对话里。
+  OpenCode 的做法：`opencode auth export | ssh myserver '<服务器上 opencode 的路径> auth import'`。
+- 用设备码登录的引擎，在服务器上发起登录，只把我需要打开的网址和要输入的码给我。
+- 每登录完一个引擎：在服务器上运行 `openmausbot models`，确认能看到它的模型；然后选这个引擎的一个模型，跑
+  `openmausbot run "MausBot" "只回复：OK"`。
+- 如果我指定了新 Bot 的默认模型，就设成 <模型>。
+
+绝不回显 API key、token 或认证文件。如果某一步需要在浏览器里操作，停下来，明确告诉我要点什么。
+```
+
+## 需要你亲自做的
+
+- **在浏览器里批准每一次登录：** 输入设备码（Codex、Kimi），或者打开链接、把授权码粘回来（Claude）。要用有订阅的那个账号。用 API / Console 账号登录就会变成按 token 计费。
+- API key 自己粘贴到 设置 → API 密钥，不要发进和 Agent 的对话。OpenMausBot 保存后不会再显示明文，只把它交给对应的引擎进程。
+
+{/* 截图：设置 → 模型提供方，OpenCode 和 Codex 显示可用。src/assets/screenshots/engines/engines-ready.png */}
+
+## 验证
+
+打开 **设置 → 模型提供方**，登录好的引擎会显示 **就绪**。再到任意对话顶部的模型选择器里，确认能看到它的模型。
+
+## 常见问题
+
+- **两个服务商，模型名几乎一模一样。** 在 OpenCode 里，`Go · DeepSeek V4.1 Flash` 走的是你的 Go 订阅，`Zen · DeepSeek V4.1 Flash` 按 token 从 Zen 余额里扣钱。认前缀，别只看名字。
+- **搬了 OpenCode 的登录，却只看到 Zen 的模型。** OpenCode 2 的后台服务在导入凭据之前就已启动，一直沿用旧状态。重启后列表就正常了。OpenMausBot 0.1.145 起，模型列表会自动刷新。
+- **Claude 提示“try a different browser”。** 这句提示很笼统，容易误导人。登录链接很长而且会过期：复制时被截断、用了两次、或者浏览器里登录的是另一个 Claude 账号，都会失败。重新发起一次登录，打开完整的链接，确认登录的是哪个账号，把整段授权码（包括 `#` 后面的部分）粘回去。
+- **服务器上 Gemini 回复“User location is not supported”，别的机器上却正常。** 可能是服务器访问 Google 的线路和其他机器不同。先比较两台机器的 DNS 和出站线路，找到差别再处理。
+- **Antigravity 不会复用你现有的 `agy` 登录。** OpenMausBot 走的是 Google 官方的 ACP runtime（Agent Client Protocol），要在 **设置 → 模型提供方** 里安装并重新登录。每个 Google 账号对应一个实例。
