@@ -21,7 +21,8 @@ function basePath(pathname: string): string {
 	}
 	return pathname;
 }
-const base = basePath(Astro.url.pathname);
+// The 404 page has no URL of its own, so its language links go to each home page.
+const base = /\/404\/?$/.test(Astro.url.pathname) ? '/' : basePath(Astro.url.pathname);
 const hrefFor = (code: string) => (code === 'root' ? base : `/${code}${base}`);
 const menuId = `lang-menu-${Math.random().toString(36).slice(2, 8)}`;
 ---
