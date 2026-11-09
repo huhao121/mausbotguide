@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mausbotguide.com/sitemap-index.xml
+Sitemap: https://mausbotguide.com/sitemap.xml
