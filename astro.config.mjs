@@ -64,6 +64,10 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { name: 'x-build', content: buildId } },
 				{ tag: 'link', attrs: { rel: 'icon', href: '/favicon.ico', sizes: '32x32' } },
 				{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' } },
+				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://mausbotguide.com/og.jpg' } },
+				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+				{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://mausbotguide.com/og.jpg' } },
 			],
 			sidebar: [
 				{
