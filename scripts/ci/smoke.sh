@@ -4,7 +4,7 @@
 set -euo pipefail
 base="${1:?base url required}"; base="${base%/}"
 expect_build="${2:-}"
-paths=("/" "/zh/" "/sitemap-index.xml" "/robots.txt")
+paths=("/" "/zh/" "/sitemap.xml" "/robots.txt")
 attempts=12; delay=15
 
 check() {

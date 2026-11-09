@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import { locales } from './src/locales.mjs';
+import singleSitemap from './src/integrations/single-sitemap.mjs';
 
 
 // Build id rendered into every page so the deploy smoke test can confirm the new version is live.
@@ -16,6 +17,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'MausBot Guide',
+			routeMiddleware: './src/routeData.ts',
 			description:
 				'Unofficial, hands-on guides for OpenMausBot: install, connect engines, run bots 24/7, and pick the right hardware.',
 			defaultLocale: 'root',
@@ -91,5 +93,7 @@ export default defineConfig({
 				},
 			],
 		}),
+		// Must stay after starlight(): it replaces the sitemap files Starlight generates.
+		singleSitemap(),
 	],
 });
