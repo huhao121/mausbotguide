@@ -1,6 +1,6 @@
 ---
 title: OpenMausBot CLI reference
-description: The openmausbot commands you'll actually use, covering host checks, the service, pairing, giving bots work, team files, engines, tokens and MCP. Almost anything the settings screens do, the CLI does too.
+description: The openmausbot commands you will actually use, covering host checks, the service, pairing, team files, engines, tokens and MCP.
 verifiedOn: 0.1.146
 sidebar:
   order: 1

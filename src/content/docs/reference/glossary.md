@@ -1,6 +1,6 @@
 ---
 title: Glossary
-description: The terms this guide uses and what the OpenMausBot app and CLI call them, from bots, engines and conversations to approval levels, routines and standing instructions, plus how placeholders are written.
+description: The terms this guide uses and what the OpenMausBot app and CLI call them, from bots and engines to approval levels and routines.
 sidebar:
   order: 3
   label: Glossary
