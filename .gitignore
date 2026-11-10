@@ -28,6 +28,9 @@ pnpm-debug.log*
 *.key
 
 # locally installed agent skills (tooling, not site content)
-.agents/
-.claude/skills/
-skills-lock.json
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/mbg-content/
+.claude/skills/*
+!.claude/skills/mbg-content

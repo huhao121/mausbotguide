@@ -1,0 +1,117 @@
+---
+title: 如何把 Gmail 连接到 OpenMausBot
+description: 让 Bot 读取、搜索和起草你的 Gmail。桌面版直接授权，自托管服务器先填 Composio 项目密钥，再按 Bot 限制能用哪些工具。
+verifiedOn: 0.1.151
+sidebar:
+  order: 7
+  label: 连接 Gmail
+---
+
+import Figure from '../../../../components/Figure.astro';
+import Diagram from '../../../../components/Diagram.astro';
+
+连好 Gmail 之后，Bot 可以查收件箱、搜索邮件、写草稿。OpenMausBot 自带这条连接，大多数人用不着建 Google Cloud 项目，也用不着自己搭 MCP。
+
+<Figure name="connect-gmail" alt="水墨画：一只手把一把小铜钥匙递给小机器人，旁边是木制信箱和捆好的空白信封，一大串钥匙挂在高处的钩子上。" />
+
+## 前提条件
+
+- 一个能用的 OpenMausBot，桌面版或服务器都行，并且至少有一个 Bot（见[快速入门](/zh/start/)）。
+- 能登录你要连接的 Gmail 账号。Google 授权这一步必须你本人来。
+- 如果是自托管服务器，还需要一个 Composio 账号。
+
+提示词里的 `<…>` 要换成你自己的值。
+
+## 先做决定
+
+先看你的 OpenMausBot 跑在哪里。用桌面 App 远程连到服务器的，按服务器算。
+
+| 你的 OpenMausBot | 连接由谁提供 | 要填 Composio 密钥吗 |
+|---|---|---|
+| 桌面安装包 | OpenMausBot 自带的托管服务 | 不用 |
+| MausBot Cloud | 套餐已包含 | 不用 |
+| 自托管服务器 | 你自己的 Composio 项目 | 要，免费版不用绑卡 |
+
+只有自托管服务器才用自己的 Composio 额度。免费版每月 10,000 次工具调用，用到上限就停（2026 年 11 月[官网价格](https://composio.dev/pricing)）。
+
+连接方式有三种，建议先用内置连接。
+
+| 方式 | 代价 | 什么时候用 |
+|---|---|---|
+| 内置连接 | Google 的授权由 Composio 保管 | 默认选它，授权一次就能用 |
+| 应用专用密码 | 要开两步验证，生成时选不了权限范围，[Google 的说明](https://support.google.com/accounts/answer/185833)是它让应用访问你的 Google 账号 | 不想经过第三方，并且接受这个权限 |
+| 自建 Google OAuth 或 Gmail MCP | 要建 Google Cloud 项目。应用停留在测试状态时，[授权 7 天就过期](https://developers.google.com/identity/protocols/oauth2)，每周要重新点一次 | 你要完全自己管理这条连接 |
+
+<Diagram name="connect-gmail" alt="连接流程：桌面版和 MausBot Cloud 直接打开应用窗口；自托管服务器先在 Composio 拿到 ak_ 开头的项目密钥并填进设置；然后都是点连接、登录 Google 授权，最后给 Bot 设置工具权限。" />
+
+## 交给 AI Agent
+
+把这段发给 OpenMausBot 里的任意一个 Bot。它能发连接卡片，你点卡片就行。
+
+```text title="提示词"
+帮我把 Gmail 连接到这个 OpenMausBot，账户标签用 <personal>。
+
+先检查已连接应用的服务是否就绪：
+- 已就绪：直接在对话里发 Gmail 的连接卡片。
+- 还没设置：告诉我去 Composio 拿 ak_ 开头的项目密钥，再发安全输入卡让我填，不要让我把密钥贴到聊天里。
+
+Google 的登录和授权必须由我本人完成，到这一步停下来，告诉我要点什么。
+不要自己搭 Gmail MCP，不要让我建 Google Cloud 项目，也不要改用应用专用密码，除非我明确要求。
+
+连好之后，只读取最近三封邮件的发件人和主题，证明连接可用。不要发信、改标签或删除邮件。
+不要在对话里打印密钥。改配置前先备份。改 DNS、路由、时区之前先问我。
+
+最后用一张表告诉我：连接状态、账户标签、这个 Bot 现在能用 Gmail 的哪些工具。
+```
+
+## 需要你亲自做的
+
+### 自托管服务器：先拿 Composio 项目密钥
+
+桌面版和 MausBot Cloud 跳过这一段。
+
+1. 打开 [Composio 控制台](https://dashboard.composio.dev)，切到 `Platform`，选择或新建一个项目，进入 `Settings → API Keys`。
+2. 新建一个密钥，复制 `ak_` 开头的那一串。默认权限就能用。想要最小权限的话，只需要 Sessions 读写、Toolkits 读取、Connected accounts 读写。
+3. 回到 OpenMausBot，打开 **设置 → API 密钥**，粘贴到 **Composio 项目密钥**。粘贴后它会自动保存并检查。
+
+### 连接账号
+
+1. 点 App 左下角的 **连接应用**。已经连过应用的话，这个按钮叫 **应用**。在打开的窗口里搜索 Gmail，点 **连接**。
+2. 给这个账户起个标签，比如 `work` 或 `personal`。每个账户都要有标签，以后连第二个邮箱靠它区分。
+3. 在打开的浏览器页面登录 Google。权限里勾选 Gmail 和查看邮箱地址就够了，联系人、生日、电话这些和收发邮件无关。
+4. 回到 App，点窗口右上角的 **已连接**，账户出现在列表里，就连好了。
+
+同一个应用最多连 5 个账户，用 **添加账户** 继续加。不想用了点 **断开连接**，它只撤销这一行对应的账户。
+
+### 限制每个 Bot 能做什么
+
+Google 的授权页写的是可以阅读、撰写、发送和永久删除邮件。这个范围在 Google 那边调不小，要在 OpenMausBot 里按 Bot 限制。
+
+打开 Bot 的 **机器人设置 → 访问 → 已连接的应用**，确认 **允许这个机器人使用已连接的应用** 是打开的，然后展开 Gmail，在 **各应用的工具** 里选择。
+
+| 这个 Bot 的工作 | 建议勾选 |
+|---|---|
+| 帮你看邮件、写摘要 | **读取** |
+| 帮你写回复，由你发送 | **读取**、**起草** |
+| 可以替你发信 | **读取**、**起草**、**发送**，想清楚再给 |
+
+**修改** 和 **删除** 没有明确需要就别给。
+
+## 验证
+
+对已经授权的 Bot 说：
+
+```text title="提示词"
+看看我最近三封未读邮件，只告诉我发件人和主题。
+```
+
+它能列出真实的邮件，就说明连接和权限都没问题。Google 这时通常会发一封安全提醒，说你授权了新应用，这是正常的。
+
+## 常见问题
+
+- **连接按钮是灰的，提示主机上尚未设置已连接的应用。** 自托管服务器还没有项目密钥。按上面的步骤填好，按钮就能点了。
+- **在 Composio 里复制错了密钥。** `ck_` 开头的是给 MCP 客户端用的 consumer key，OpenMausBot 要的是 `ak_` 开头的项目密钥。把控制台切到 `Platform`，再进项目设置里的 API Keys。那里的 `Add Custom MCP` 不用点。
+- **应用专用密码一直被拒绝。** Google 显示的 16 位密码分成 4 组，粘贴时把空格去掉，也确认填的不是 Google 登录密码。开了高级保护的账号可能根本看不到这个选项。
+- **Bot 说这个模型用不了已连接的应用。** 设置里会显示 **这个机器人当前的模型无法使用已连接的应用**，给它换一个模型。
+- **创建过滤器或设置转发时被拒绝。** 报错是 `403 ACCESS_TOKEN_SCOPE_INSUFFICIENT`。默认连接不申请这些权限，重新连接也没用。要在 Composio 的 `Auth Configs` 里用你自己的 OAuth 应用加上权限，再重新连接账号。
+- **想让收到新邮件时自动跑 Bot，但服务器上做不到。** 用自己的 Composio 项目密钥的服务器暂时不能监听应用事件。改用定时任务定期检查邮箱，见[如何设置定时任务](/zh/guides/routines/)。
