@@ -1,7 +1,7 @@
 ---
 title: How to run OpenMausBot 24/7 on a home server
 description: Turn a mini PC with Ubuntu 24.04 Server into an OpenMausBot server that starts at boot and recovers from crashes, using your AI agent or by hand.
-verifiedOn: 0.1.146
+verifiedOn: 0.1.151
 sidebar:
   order: 1
   label: Run 24/7 on a mini PC
@@ -22,7 +22,7 @@ Ours is a low-power mini PC in the N100/N150 class (4 cores, 16 GB RAM, wired). 
 |---|---|---|
 | OS | **Ubuntu Server 24.04 LTS** | A desktop environment uses memory a server doesn't need, and OpenMausBot won't control an Ubuntu Wayland desktop for safety. Bots get their own desktop in a container; the host needs no GUI |
 | User | **Dedicated**, e.g. `bot` | Bots have that user's permissions |
-| Install | **npm into `~/.local`, pinned version** | Upgrade and rollback are one command each |
+| Install | **npm with a pinned version**, into `~/.local` | Upgrade and rollback are one command each |
 | Network | **Wired** | Long-lived streams to your phone and browser are steadier |
 
 Install the OS, create the user, enable OpenSSH, and make sure you can `ssh <user>@<server-ip>`.
@@ -101,8 +101,6 @@ If your network routes traffic by domain, a server with different DNS from your 
 ## Pair
 
 Open the pairing link and press **Connect**. The browser stays signed in for 30 days. Codes last 5 minutes and work once. If one expires, generate a new one on the server, or ask your AI agent to do it.
-
-{/* SCREENSHOT: pairing page (blur the code). src/assets/screenshots/home-server/pair.png */}
 
 ## Check it worked
 

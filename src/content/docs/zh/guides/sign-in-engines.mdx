@@ -1,7 +1,7 @@
 ---
 title: 如何在服务器上登录 Claude、Codex、OpenCode
 description: 让没有显示器的 OpenMausBot 服务器用上你的 Claude、Codex、OpenCode、Kimi、Antigravity，按无界面登录的难易排序。
-verifiedOn: 0.1.146
+verifiedOn: 0.1.151
 sidebar:
   order: 3
   label: 在服务器上登录引擎
@@ -10,7 +10,7 @@ sidebar:
 import Figure from '../../../../components/Figure.astro';
 import Diagram from '../../../../components/Diagram.astro';
 
-引擎就是 Bot 背后实际运行的 Agent CLI：`claude`、`codex`、`opencode` 等等。在服务器上，每个引擎都要**在服务器上**单独登录，因为进程在那里运行。CLI 可以在 **设置 → 模型提供方** 里一键安装（装在 `~/.openmausbot/tools`），也可以自己用 npm 装。装好后都要在服务器上登录。
+引擎就是 Bot 背后实际运行的 Agent CLI：`claude`、`codex`、`opencode` 等等。在服务器上，每个引擎都要**在服务器上**单独登录，因为进程在那里运行。CLI 可以在 **设置 → AI** 里一键安装（装在 `~/.openmausbot/tools`），也可以自己用 npm 装。装好后都要在服务器上登录。
 
 <Figure name="sign-in-engines" alt="层叠剪纸画：机器人扛着一把大钥匙，从发光的手机走向一台没有屏幕、只有一道窄缝的服务器，腰间还挂着五把形状各异的钥匙。" />
 
@@ -59,13 +59,11 @@ OpenCode 还有免登录的免费模型，用来测试流程不错，正式干�
 ## 需要你亲自做的
 
 - **在浏览器里批准每一次登录：** 输入设备码（Codex、Kimi），或者打开链接、把授权码粘回来（Claude）。要用有订阅的那个账号。用 API / Console 账号登录就会变成按 token 计费。
-- API key 自己粘贴到 设置 → API 密钥，不要发进和 Agent 的对话。OpenMausBot 保存后不会再显示明文，只把它交给对应的引擎进程。
-
-{/* 截图：设置 → 模型提供方，OpenCode 和 Codex 显示可用。src/assets/screenshots/engines/engines-ready.png */}
+- API key 自己粘贴到 **设置 → AI → API 密钥**，不要发进和 Agent 的对话。OpenMausBot 保存后不会再显示明文，只把它交给对应的引擎进程。
 
 ## 验证
 
-打开 **设置 → 模型提供方**，登录好的引擎会显示 **就绪**。再到任意对话顶部的模型选择器里，确认能看到它的模型。
+打开 **设置 → AI**，登录好的引擎列在 **你的 AI** 下面，显示账号邮箱或 **就绪**。再到任意对话顶部的模型选择器里，确认能看到它的模型。
 
 ## 常见问题
 
@@ -73,4 +71,4 @@ OpenCode 还有免登录的免费模型，用来测试流程不错，正式干�
 - **搬了 OpenCode 的登录，却只看到 Zen 的模型。** OpenCode 2 的后台服务在导入凭据之前就已启动，一直沿用旧状态。重启后列表就正常了。OpenMausBot 0.1.145 起，模型列表会自动刷新。
 - **Claude 提示“try a different browser”。** 这句提示很笼统，容易误导人。登录链接很长而且会过期：复制时被截断、用了两次、或者浏览器里登录的是另一个 Claude 账号，都会失败。重新发起一次登录，打开完整的链接，确认登录的是哪个账号，把整段授权码（包括 `#` 后面的部分）粘回去。
 - **服务器上 Gemini 回复“User location is not supported”，别的机器上却正常。** 可能是服务器访问 Google 的线路和其他机器不同。先比较两台机器的 DNS 和出站线路，找到差别再处理。
-- **Antigravity 不会复用你现有的 `agy` 登录。** OpenMausBot 走的是 Google 官方的 ACP runtime（Agent Client Protocol），要在 **设置 → 模型提供方** 里安装并重新登录。每个 Google 账号对应一个实例。
+- **Antigravity 不会复用你现有的 agy 登录。** OpenMausBot 走的是 Google 官方的 ACP runtime（Agent Client Protocol），要在 **设置 → AI** 里安装并重新登录。每个 Google 账号对应一个实例。

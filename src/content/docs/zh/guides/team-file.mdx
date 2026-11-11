@@ -1,7 +1,7 @@
 ---
 title: 如何用团队文件批量配置 Bot
 description: 怎么在 OpenMausBot 里给 Bot 分工（响应快的聊天 Bot、带电脑的操作 Bot、定时巡检 Bot），以及怎么从命令行或通过 MCP 从 Claude Code 调用它们。
-verifiedOn: 0.1.146
+verifiedOn: 0.1.151
 sidebar:
   order: 4
   label: 用团队文件配置 Bot
@@ -138,4 +138,4 @@ rooms:
 
 - 一件事一个会话，每个任务开一个新会话。
 - 审批级别要明确设置。新建的 Bot，不管是在界面里建的还是用团队文件建的，默认都是 `full`（完全访问），所以每个 Bot 都写上 `approval:`。跑例行任务的 Bot 需要 `full`，否则会卡在没人批的审批卡片上。想先过目的 Bot 用 `ask`（请求批准）。`edits`（自动接受编辑）只有 Claude、Antigravity、Grok 等引擎提供，OpenCode 和 Codex 没有。如果服务端跑在你的 Mac 上，Bot 以你本人的身份运行，更要从严。
-- 自托管服务器上，已连接的应用默认全是灰的，要先在 **设置 → API 密钥 → 自建已连接应用服务** 里填 **Composio 项目密钥**。在那之前，用 CLI 往往更简单：在服务器上装 `gh`，用设备码登录一次，Bot 马上就能用 GitHub。注意：自托管的 Composio 密钥只能调用应用的工具，暂时不能监听应用事件。“当某件事发生时”这类需求用 webhook。
+- 自托管服务器上，已连接的应用默认全是灰的，要先在 **设置 → AI → API 密钥 → 自建已连接应用服务** 里填 **Composio 项目密钥**。在那之前，用 CLI 往往更简单：在服务器上装 `gh`，用设备码登录一次，Bot 马上就能用 GitHub。注意：自托管的 Composio 密钥只能调用应用的工具，暂时不能监听应用事件。“当某件事发生时”这类需求用 webhook。

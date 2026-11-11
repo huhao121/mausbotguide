@@ -1,13 +1,12 @@
 ---
 title: How to reach your server from your phone and laptop
 description: Replace the SSH tunnel with Tailscale or a public tunnel, pair the desktop app and your phone, and find out why a connection is slow.
-verifiedOn: 0.1.146
+verifiedOn: 0.1.151
 sidebar:
   order: 2
   label: Reach it from phone and laptop
 ---
 import Diagram from '../../../components/Diagram.astro';
-
 
 ## What you get
 
@@ -59,12 +58,9 @@ Do not change the server's DNS, routes or exit node.
 4. **Open each pairing link** on its device. In the desktop app, use **Server → Add Server from Copied Pairing
    Link…** and paste the link. Don't choose **Make &lt;server&gt; my home** unless you mean to move all your bots there.
 
-{/* SCREENSHOT: Tailscale admin, HTTPS Certificates toggle. src/assets/screenshots/remote-access/ts-https.png */}
-{/* SCREENSHOT: desktop app, Server menu > Add Server from Copied Pairing Link. src/assets/screenshots/remote-access/app-add-server.png */}
-
 ## Check it worked
 
-On any device on your tailnet, open `https://<name>.<tailnet>.ts.net/api/health`. If it returns a response, the connection works. Paired browsers, apps and phones are listed under **Settings → Remote access → Paired devices**.
+On any device on your tailnet, open `https://<name>.<tailnet>.ts.net/api/health`. If it returns a response, the connection works. Paired browsers, apps and phones are listed under **Settings → Computer → This server → Paired devices**.
 
 What a phone can do depends on how it is paired. A phone browser paired with a code gets the same web app
 as your computer. The native iOS app, and anything paired with client-only access, can chat, answer approval cards and read.

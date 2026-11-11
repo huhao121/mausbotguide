@@ -1,7 +1,7 @@
 ---
 title: How to sign in to Claude, Codex and OpenCode on a server
 description: Give a headless OpenMausBot server your Claude, Codex, OpenCode, Kimi or Antigravity access, ranked by how well each works without a screen.
-verifiedOn: 0.1.146
+verifiedOn: 0.1.151
 sidebar:
   order: 3
   label: Sign in to engines
@@ -12,7 +12,7 @@ import Diagram from '../../../components/Diagram.astro';
 
 An engine is the agent CLI a bot runs on: `claude`, `codex`, `opencode`, and so on. On a server, each engine needs
 its own sign-in **on the server**, because that's where the processes run. You can install a CLI from
-**Settings → Model providers** (it goes into `~/.openmausbot/tools`) or with npm yourself. Either way, sign it in on the server.
+**Settings → AI** (it goes into `~/.openmausbot/tools`) or with npm yourself. Either way, sign it in on the server.
 
 <Figure name="sign-in-engines" alt="Layered paper-cut art: a robot carries a large key from a glowing phone toward a screenless server with a slot, with five differently shaped keys hanging from its belt." />
 
@@ -63,14 +63,12 @@ Never echo API keys, tokens, or auth files. If a sign-in needs a browser step, s
 
 - **Approve each sign-in in your browser:** enter the device code (Codex, Kimi), or open the link and paste the code
   back (Claude). Use the account that has the subscription. An API/Console account bills per token instead.
-- Paste API keys into Settings → API keys yourself, not into a chat with your agent. OpenMausBot stores them
+- Paste API keys into **Settings → AI → API keys** yourself, not into a chat with your agent. OpenMausBot stores them
   write-only and passes them only to the engine process.
-
-{/* SCREENSHOT: Settings → Model providers with OpenCode and Codex ready. src/assets/screenshots/engines/engines-ready.png */}
 
 ## Check it worked
 
-Open **Settings → Model providers**. Each signed-in engine shows **Ready**. Then open the model selector at the top of any chat and check that its models are listed.
+Open **Settings → AI**. Each signed-in engine is listed under **Your AI** with its account email or **Ready**. Then open the model selector at the top of any chat and check that its models are listed.
 
 ## Where it goes wrong
 
@@ -84,5 +82,5 @@ Open **Settings → Model providers**. Each signed-in engine shows **Ready**. Th
   part).
 - **Gemini answers "User location is not supported" on the server but works elsewhere.** The server may reach
   Google by a different route from your other machines. Compare their DNS and outbound routes first, then fix the difference.
-- **Antigravity: your existing `agy` login is not reused.** OpenMausBot uses Google's official ACP runtime. Install
-  it from **Settings → Model providers** and sign in there. One instance per Google account is supported.
+- **Antigravity doesn't reuse your existing agy login.** OpenMausBot uses Google's official ACP runtime. Install
+  it from **Settings → AI** and sign in there. One instance per Google account is supported.

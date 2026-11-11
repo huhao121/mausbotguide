@@ -1,7 +1,7 @@
 ---
 title: 如何用家里的小主机 24 小时跑 OpenMausBot
 description: 把一台迷你主机装成 Ubuntu 24.04 Server，变成开机自启、崩溃自动重启的 OpenMausBot 服务器。可以全部交给 AI Agent 通过 SSH 完成，也可以照着命令自己做。
-verifiedOn: 0.1.146
+verifiedOn: 0.1.151
 sidebar:
   order: 1
   label: 用小主机 24 小时运行
@@ -22,7 +22,7 @@ import Figure from '../../../../components/Figure.astro';
 |---|---|---|
 | 系统 | **Ubuntu Server 24.04 LTS** | 桌面环境会白白占用内存，而且 OpenMausBot 出于安全考虑不会操控 Ubuntu 的 Wayland 桌面。Bot 的桌面跑在容器里，宿主机不需要图形界面 |
 | 运行账号 | **专用用户**，比如 `bot` | Bot 拥有这个账号的全部权限 |
-| 安装方式 | **npm 装到 `~/.local`，固定版本号** | 升级、回滚都是一条命令 |
+| 安装方式 | **npm 安装并固定版本号**，装到 `~/.local` | 升级、回滚都是一条命令 |
 | 网络 | **有线** | 到手机和浏览器的长连接更稳 |
 
 装好系统、创建好用户、安装时勾选 OpenSSH，确认你的电脑能 `ssh <用户>@<服务器IP>` 登录。
@@ -100,8 +100,6 @@ ssh -N -L 8799:127.0.0.1:8799 <用户>@<服务器IP>
 ## 配对
 
 在浏览器里打开配对链接，点 **Connect**，浏览器会保持登录 30 天。配对码只有 5 分钟有效、只能用一次，过期了就在服务器上重新生成一个，交给 AI Agent 做也行。
-
-{/* 截图：配对页面（把配对码打码）。src/assets/screenshots/home-server/pair.png */}
 
 ## 验证
 
