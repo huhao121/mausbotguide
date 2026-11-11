@@ -1,7 +1,7 @@
 ---
 title: 如何从手机和笔记本连上服务器
 description: 用 Tailscale（私有 HTTPS）或隧道（公网 HTTPS + 配对码）替代 SSH 隧道，配对桌面 App 和手机，以及连接很慢时该查什么。
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 2
   label: 从手机和笔记本连上
@@ -57,13 +57,13 @@ import Diagram from '../../../../components/Diagram.astro';
 
 ## 验证
 
-在 tailnet 里任意一台设备上打开 `https://<名字>.<tailnet>.ts.net/api/health`，能返回内容就通了。配对过的浏览器、App 和手机，可以在 **设置 → 电脑 → 这台服务器 → 已配对的设备** 里看到。
+在 tailnet 里任意一台设备上打开 `https://<名字>.<tailnet>.ts.net/api/health`，能返回内容就通了。配对过的浏览器、App 和手机，列在 **设置 → 电脑 → 这台服务器 → 配对手机或电脑** 下面。
 
 手机能做什么取决于怎么配对。用配对码配对的手机浏览器，和电脑上的网页版一样。原生 iOS App，以及只给了客户端权限的设备，只能聊天、处理审批卡片和查看。新建 Bot、改模型、连接应用要在网页版里做。两者在 App 关闭后都收不到提醒：网页版没有推送通知，iOS App 只在打开时或刚切到后台的一小段时间内提醒。
 
 ## 常见问题
 
 - **切换之后服务一直崩溃重启。** 日志写着 `Tailscale refused: on Linux run sudo tailscale set --operator=$USER once`，对应的就是提示词里的第 2 步。
-- **手机能打开页面，但一直卡在“正在连接”。** 用流量上网时，Tailscale 打不通直连，改走中继（DERP），往返延迟明显变高。页面能加载，但实时事件流跟不上。用 `tailscale ping <手机>` 看到 `via DERP` 就能确认。常见原因是手机在运营商 NAT 后面，或者网络规则让 Tailscale 找不到直连路线。
+- **手机能打开页面，但一直卡在“正在连接”。** 用流量上网时，Tailscale 打不通直连，改走中继（DERP），往返延迟明显变高。页面能加载，但实时事件流跟不上。用 `tailscale ping <手机>` 看到 `via DERP`，说明连接确实走了中继。常见原因是手机在运营商 NAT 后面，或者网络规则让 Tailscale 找不到直连路线。
 - **在代理后面，Cloudflare Tunnel 也可能连不上。** `cloudflared` 报 `TLS handshake with edge error: EOF`，通常是代理干扰了隧道连接。这时可以让 Tailscale 的 UDP 流量绕过代理。前提是你清楚自己的网络规则，规则写得太宽，可能影响其他流量的线路。
 - **添加到主屏幕要用系统浏览器：** iPhone 用 Safari，Android 用 Chrome。

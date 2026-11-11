@@ -1,7 +1,7 @@
 ---
 title: 一个聊天框用上 Claude、Codex、Gemini 和所有订阅
 description: 不用再一个个打开 claude、codex、agy、opencode 命令行。OpenMausBot 把你已有的订阅都接进来，每个 Bot 选一个模型，便宜的跑日常、强的干重活。附我们的分工。
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 1
   label: 一个地方用上所有订阅
@@ -57,10 +57,14 @@ OpenCode 里，`Go · DeepSeek V4.1 Flash` 走的是 Go 订阅，`Zen · DeepSee
 
 ## 看看额度花在哪了
 
-**设置 → 用量与账单** 页面里，每个已登录的方案一张卡片，列出还剩多少、什么时候重置。有几处容易看错：
+**设置 → 用量与账单** 顶部只显示用得最多的那个方案。点开 **查看全部限额**，往下找到 **方案用量**，每个已登录的方案一行，列出还剩多少、什么时候重置。
+
+![方案用量：Claude 有 5 小时和每周两行，Codex 的 5 小时那行写着“此方案未提供该数据”](../../../../assets/screenshots/all-subscriptions/plan-usage.zh.png)
+
+有几处容易看错：
 
 - Claude 同时报 5 小时和周窗口，各有重置倒计时。
-- Codex 和 ChatGPT 方案只报周窗口，5 小时那一行写的是「此方案未提供该数据」。这不代表没登录，这个方案本来就不提供这个数字。
+- 我们的 Codex Pro 方案只报周窗口，5 小时那一行写的是「此方案未提供该数据」。这不代表没登录。OpenMausBot 显示的是 OpenAI 给这个方案返回的窗口，你的方案可能不一样。
 - 同一个订阅可能出现两行。我们的机器上同时装了 Codex 和 ChatGPT 两个实例（背后是同一个 `codex` 命令行），用量页把它们分开列，数字一样。
 - 按量计费的接口显示「本月花费」和按模型的明细，订阅类方案显示的是百分比。
 
