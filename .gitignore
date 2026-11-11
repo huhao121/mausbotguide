@@ -26,11 +26,3 @@ pnpm-debug.log*
 .dev.vars*
 *.pem
 *.key
-
-# locally installed agent skills (tooling, not site content)
-.agents/*
-!.agents/skills/
-.agents/skills/*
-!.agents/skills/mbg-content/
-.claude/skills/*
-!.claude/skills/mbg-content
