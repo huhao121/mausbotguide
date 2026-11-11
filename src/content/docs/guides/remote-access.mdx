@@ -1,7 +1,7 @@
 ---
 title: How to reach your server from your phone and laptop
 description: Replace the SSH tunnel with Tailscale or a public tunnel, pair the desktop app and your phone, and find out why a connection is slow.
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 2
   label: Reach it from phone and laptop
@@ -60,7 +60,7 @@ Do not change the server's DNS, routes or exit node.
 
 ## Check it worked
 
-On any device on your tailnet, open `https://<name>.<tailnet>.ts.net/api/health`. If it returns a response, the connection works. Paired browsers, apps and phones are listed under **Settings → Computer → This server → Paired devices**.
+On any device on your tailnet, open `https://<name>.<tailnet>.ts.net/api/health`. If it returns a response, the connection works. Paired browsers, apps and phones are listed under **Settings → Computer → This server → Pair a phone or computer**.
 
 What a phone can do depends on how it is paired. A phone browser paired with a code gets the same web app
 as your computer. The native iOS app, and anything paired with client-only access, can chat, answer approval cards and read.
@@ -73,7 +73,8 @@ the web app has no push notifications, and the iOS app alerts only while open or
   set --operator=$USER once`. That's step 2 of the prompt.
 - **The phone loaded the page but got stuck on "connecting".** On mobile data, Tailscale could not open a direct
   path and fell back to a relay (DERP) with much higher round-trip times. Static files arrived. The live event stream did
-  not keep up. `tailscale ping <phone>` showing `via DERP` confirms it. Common causes are carrier NAT on the phone
+  not keep up. `tailscale ping <phone>` showing `via DERP` means the connection is going
+  through the relay. Common causes are carrier NAT on the phone
   or network rules that stop Tailscale from finding a direct route.
 - **A Cloudflare Tunnel may not work behind a proxy.** `cloudflared` can fail with `TLS handshake with edge error:
   EOF` when a proxy interferes with the tunnel connection. In that case, let Tailscale's UDP traffic bypass the proxy.

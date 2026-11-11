@@ -1,7 +1,7 @@
 ---
 title: Claude, Codex, Gemini and all your subscriptions in one chat
 description: Stop switching between claude, codex, agy and opencode. OpenMausBot plugs in the subscriptions you already have and gives each bot its own model.
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 1
   label: All your subscriptions, one place
@@ -57,10 +57,14 @@ In OpenCode, `Go · DeepSeek V4.1 Flash` uses your Go subscription; `Zen · Deep
 
 ## See where the quota goes
 
-**Settings → Usage & billing** shows one card per signed-in plan: how much is left and when it resets. A few things are easy to misread:
+**Settings → Usage & billing** shows only your busiest plan at the top. Open **See all limits** and scroll to **Plan usage**: each signed-in plan gets a row with how much is left and when it resets.
+
+![Plan usage: Claude has a 5-hour and a weekly row. The Codex 5-hour row says Not reported by this plan](../../../assets/screenshots/all-subscriptions/plan-usage.en.png)
+
+A few things are easy to misread:
 
 - Claude reports both the 5-hour and the weekly window, each with a reset countdown.
-- Codex and ChatGPT plans report only the weekly window. The 5-hour row says "Not reported by this plan" even when you're signed in.
+- Our Codex Pro plan reports only the weekly window, so its 5-hour row says "Not reported by this plan" even though it's signed in. OpenMausBot shows whichever windows OpenAI returns for your plan, so yours may differ.
 - One subscription can show up twice. Our machine has both a Codex and a ChatGPT instance (both driving the same `codex` CLI), and the page lists them separately with the same numbers.
 - Pay-per-token endpoints show a monthly spend and a per-model breakdown. Subscription plans show percentages.
 

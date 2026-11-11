@@ -1,7 +1,7 @@
 ---
 title: 在手机上看 Bot 干活、随时审批
 description: OpenMausBot 跑在家里的服务器上，你在外面用手机就能看到每个 Bot 在做什么，点一下审批卡片放行，或者按停止。手机只是遥控器，关掉它 Bot 照样干活。
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 2
   label: 手机上看 Bot 干活
@@ -34,14 +34,16 @@ import Figure from '../../../../components/Figure.astro';
 
 2. **手机装 Tailscale，登录同一个账号。**
 
-3. **在电脑上生成手机的配对码。** 打开 **设置 → 电脑 → 这台服务器 → 生成配对代码**，会显示二维码和配对码。
+3. **在电脑上生成手机的配对码。** 打开 **设置 → 电脑 → 这台服务器 → 生成配对码**，会显示二维码和配对码。
+
+   ![电脑 → 这台服务器：点生成配对码后显示二维码和配对码（都已模糊），下面列着已配对的设备](../../../../assets/screenshots/this-server/pair.zh.png)
 
 4. **在手机上打开配对链接。** 想要接近 App 的体验，用 Safari（iPhone）或 Chrome（Android）打开后添加到主屏幕。网页版和 iOS App 关闭后都收不到提醒，需要时自己打开看。
 
 </Steps>
 
 :::caution[手机打开了页面，却一直卡在"正在连接"]
-用流量时如果 Tailscale 打不通直连，就会改走中继，延迟明显变高，实时事件流跟不上。用 `tailscale ping <手机>` 看到 `via DERP` 就能确认是这个问题。原因和解决办法请参阅[远程访问](/zh/guides/remote-access/)。
+用流量时如果 Tailscale 打不通直连，就会改走中继，延迟明显变高，实时事件流跟不上。用 `tailscale ping <手机>` 看到 `via DERP`，说明连接确实走了中继。原因和解决办法请参阅[远程访问](/zh/guides/remote-access/)。
 :::
 
 ## 用得更顺手

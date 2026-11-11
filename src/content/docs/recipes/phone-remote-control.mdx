@@ -1,7 +1,7 @@
 ---
 title: Watch your bots work and approve from your phone
 description: Run OpenMausBot on a home server and use your phone to see what every bot is doing, approve a card with one tap, or press Stop.
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 2
   label: Approve from your phone
@@ -34,14 +34,16 @@ The phone is only a remote. Close it and bots keep working on the server.
 
 2. **Install Tailscale on the phone** and sign in to the same account.
 
-3. **Create a pairing code on your computer:** **Settings → Computer → This server → Create pairing code** shows a QR code and a code.
+3. **Create a pairing code on your computer:** **Settings → Computer → This server → Create code** shows a QR code and a code.
+
+   ![Computer → This server: Create code shows a QR code and a pairing code (both blurred), with paired devices listed below](../../../assets/screenshots/this-server/pair.en.png)
 
 4. **Open the pairing link on the phone.** For an app-like feel, open it in Safari (iPhone) or Chrome (Android) and add it to the home screen. Neither the web app nor the iOS app alerts you once it is closed, so check in rather than waiting for a ping.
 
 </Steps>
 
 :::caution[The page loads but stays on "connecting"]
-On mobile data, if Tailscale can't get a direct path it falls back to a relay with much higher latency and the live event stream can't keep up. `tailscale ping <phone>` showing `via DERP` confirms it. Causes and fixes: [remote access](/guides/remote-access/).
+On mobile data, if Tailscale can't get a direct path it falls back to a relay with much higher latency and the live event stream can't keep up. `tailscale ping <phone>` showing `via DERP` means the connection is going through the relay. Causes and fixes: [remote access](/guides/remote-access/).
 :::
 
 ## Make the phone experience better
