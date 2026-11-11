@@ -31,7 +31,7 @@
 
   <rect x="500" y="330" width="220" height="60" rx="8" fill="var(--color-alert-fill)" stroke="var(--color-alert-stroke)" stroke-width="1.5"/>
   <text x="610" y="356" fill="var(--text)" font-size="14" font-weight="600" text-anchor="middle">Save the key</text>
-  <text x="610" y="376" fill="var(--text-muted)" font-size="12" text-anchor="middle">Settings → API keys</text>
+  <text x="610" y="376" fill="var(--text-muted)" font-size="12" text-anchor="middle">Settings → AI → API keys</text>
 
   <rect x="270" y="430" width="220" height="60" rx="8" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.5"/>
   <text x="380" y="456" fill="var(--text)" font-size="14" font-weight="600" text-anchor="middle">Click Connect on Gmail</text>

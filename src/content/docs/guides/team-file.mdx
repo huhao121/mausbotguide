@@ -1,7 +1,7 @@
 ---
 title: How to configure bots with a team file
 description: Split work across OpenMausBot bots with a team file, then drive them from the command line or from Claude Code via MCP.
-verifiedOn: 0.1.146
+verifiedOn: 0.1.151
 sidebar:
   order: 4
   label: Configure bots with a team file
@@ -149,7 +149,6 @@ Then have "<bot name>" do one small job: <task>. Wait for it to finish and show 
   write `approval:` for each bot. Bots that run routines need `full`, or they wait on a card nobody answers. Use `ask`
   for bots whose actions you want to check. `edits` exists only on engines that offer it (Claude, Antigravity, Grok),
   not on OpenCode or Codex. On a Mac home, bots run as you, so be stricter there.
-- **Connected apps are greyed out on a self-hosted server** until you add a **Composio project key** (Settings → API
-  keys → Self-host connected apps). Before that, a CLI is often simpler: install `gh` on the server and sign in with a device code, and bots
+- **Connected apps are greyed out on a self-hosted server** until you add a **Composio project key** (**Settings → AI → API keys → Self-host connected apps**). Before that, a CLI is often simpler: install `gh` on the server and sign in with a device code, and bots
   can use GitHub immediately. Note that a self-hosted Composio key can call app tools but cannot watch for app events
   yet. Use webhooks for "when X happens".

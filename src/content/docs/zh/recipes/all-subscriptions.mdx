@@ -1,7 +1,7 @@
 ---
 title: 一个聊天框用上 Claude、Codex、Gemini 和所有订阅
 description: 不用再一个个打开 claude、codex、agy、opencode 命令行。OpenMausBot 把你已有的订阅都接进来，每个 Bot 选一个模型，便宜的跑日常、强的干重活。附我们的分工。
-verifiedOn: 0.1.146
+verifiedOn: 0.1.151
 sidebar:
   order: 1
   label: 一个地方用上所有订阅
@@ -51,14 +51,13 @@ Bot 在服务器上的话，也可以把下面这段发给你的 AI Agent：
 先用 openmausbot models 查出准确的模型名，不要猜。换完告诉我新旧模型分别是什么。
 ```
 
-
 :::caution[名字一样，扣的钱不一样]
 OpenCode 里，`Go · DeepSeek V4.1 Flash` 走的是 Go 订阅，`Zen · DeepSeek V4.1 Flash` 按 token 扣 Zen 余额。选模型时看清前缀。
 :::
 
 ## 看看额度花在哪了
 
-**设置 → 用量** 页面里，每个已登录的方案一张卡片，列出还剩多少、什么时候重置。有几处容易看错：
+**设置 → 用量与账单** 页面里，每个已登录的方案一张卡片，列出还剩多少、什么时候重置。有几处容易看错：
 
 - Claude 同时报 5 小时和周窗口，各有重置倒计时。
 - Codex 和 ChatGPT 方案只报周窗口，5 小时那一行写的是「此方案未提供该数据」。这不代表没登录，这个方案本来就不提供这个数字。
@@ -66,8 +65,6 @@ OpenCode 里，`Go · DeepSeek V4.1 Flash` 走的是 Go 订阅，`Zen · DeepSee
 - 按量计费的接口显示「本月花费」和按模型的明细，订阅类方案显示的是百分比。
 
 哪份订阅还有大把额度没用，就多给它分几个 Bot。
-
-{/* 截图：用量页，显示 Claude / Codex 的额度百分比。src/assets/screenshots/recipes/usage.png */}
 
 ## 后续步骤
 

@@ -1,13 +1,12 @@
 ---
 title: 如何从手机和笔记本连上服务器
 description: 用 Tailscale（私有 HTTPS）或隧道（公网 HTTPS + 配对码）替代 SSH 隧道，配对桌面 App 和手机，以及连接很慢时该查什么。
-verifiedOn: 0.1.146
+verifiedOn: 0.1.151
 sidebar:
   order: 2
   label: 从手机和笔记本连上
 ---
 import Diagram from '../../../../components/Diagram.astro';
-
 
 ## 最终效果
 
@@ -56,12 +55,9 @@ import Diagram from '../../../../components/Diagram.astro';
 3. **手机上装 Tailscale**，登录同一个账号。
 4. **在对应设备上打开配对链接**。桌面 App 里用菜单栏的 **Server → Add Server from Copied Pairing Link…**（这个系统菜单目前只有英文），把链接粘进去。除非你真想把所有 Bot 搬到这台服务器，否则别点 **把 &lt;服务器名&gt; 设为我常用的**。
 
-{/* 截图：Tailscale 后台的 HTTPS Certificates 开关。src/assets/screenshots/remote-access/ts-https.png */}
-{/* 截图：桌面 App 的 Server 菜单 > Add Server from Copied Pairing Link。src/assets/screenshots/remote-access/app-add-server.png */}
-
 ## 验证
 
-在 tailnet 里任意一台设备上打开 `https://<名字>.<tailnet>.ts.net/api/health`，能返回内容就通了。配对过的浏览器、App 和手机，可以在 **设置 → 远程访问 → 已配对的设备** 里看到。
+在 tailnet 里任意一台设备上打开 `https://<名字>.<tailnet>.ts.net/api/health`，能返回内容就通了。配对过的浏览器、App 和手机，可以在 **设置 → 电脑 → 这台服务器 → 已配对的设备** 里看到。
 
 手机能做什么取决于怎么配对。用配对码配对的手机浏览器，和电脑上的网页版一样。原生 iOS App，以及只给了客户端权限的设备，只能聊天、处理审批卡片和查看。新建 Bot、改模型、连接应用要在网页版里做。两者在 App 关闭后都收不到提醒：网页版没有推送通知，iOS App 只在打开时或刚切到后台的一小段时间内提醒。
 
