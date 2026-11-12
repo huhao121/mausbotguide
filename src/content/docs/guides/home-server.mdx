@@ -1,7 +1,7 @@
 ---
 title: How to run OpenMausBot 24/7 on a home server
 description: Turn a mini PC with Ubuntu 24.04 Server into an OpenMausBot server that starts at boot and recovers from crashes, using your AI agent or by hand.
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 1
   label: Run 24/7 on a mini PC
@@ -12,7 +12,7 @@ import Figure from '../../../components/Figure.astro';
 
 When you're done, you have an OpenMausBot server that's always on: it starts at boot, restarts after crashes, and runs bots as a dedicated user on a separate machine, away from the personal files on your laptop. Routines (like the [daily Search Console report](/recipes/gsc-daily-report/)) run on time, every day.
 
-Ours is a low-power mini PC in the N100/N150 class (4 cores, 16 GB RAM, wired). That's plenty. See [where your bots should run](/concepts/where-to-run/).
+Ours is a low-power mini PC in the N100/N150 class (4 cores, 16 GB RAM). That's plenty. See [where your bots should run](/concepts/where-to-run/).
 
 <Figure name="home-server" alt="Woodcut print at night: a small mini PC with a green light on a shelf, a robot on a crate keeping watch beside a lantern, and a crescent moon in the window." />
 
@@ -65,7 +65,7 @@ curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker $USER && newgrp docker
 
 # 2. OpenMausBot, pinned
-npm install --global --prefix "$HOME/.local" openmausbot@0.1.146
+npm install --global --prefix "$HOME/.local" openmausbot@0.1.152
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.profile && source ~/.profile
 
 # 3. Preflight: fix every FAIL
@@ -81,7 +81,7 @@ sudo install -m 644 ~/.openmausbot/openmausbot.service /etc/systemd/system/openm
 sudo systemctl daemon-reload
 sudo systemctl enable --now openmausbot
 
-# 6. Pairing code (valid 5 minutes)
+# 6. Pairing code (valid 10 minutes)
 openmausbot pair --label "My laptop"
 ```
 
@@ -95,12 +95,12 @@ ssh -N -L 8799:127.0.0.1:8799 <user>@<server-ip>
 </Tabs>
 
 :::caution[Don't let your agent change the server's DNS]
-If your network routes traffic by domain, a server with different DNS from your other devices can take a different route, and some services may answer "location not supported". That's why the prompt forbids DNS changes.
+DNS, routing and the time zone affect every service on the machine, not just OpenMausBot. An agent that changes them to fix a small problem can cause trouble that is hard to trace, so the prompt forbids it; changing them is your call.
 :::
 
 ## Pair
 
-Open the pairing link and press **Connect**. The browser stays signed in for 30 days. Codes last 5 minutes and work once. If one expires, generate a new one on the server, or ask your AI agent to do it.
+Open the pairing link and press **Connect**. The browser stays signed in for 30 days, renewed as you use it for up to 180 days. Codes last 10 minutes and work once. If one expires, generate a new one on the server, or ask your AI agent to do it.
 
 ## Check it worked
 

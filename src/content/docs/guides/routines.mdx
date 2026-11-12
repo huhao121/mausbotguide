@@ -1,6 +1,7 @@
 ---
 title: How to put bots on a schedule
 description: Tell a bot when to run in plain words and OpenMausBot wakes it on time. Covers time zones, cron, sleeping computers and failed runs.
+verifiedOn: 0.1.152
 sidebar:
   order: 6
   label: Routines
@@ -8,7 +9,7 @@ sidebar:
 import Figure from '../../../components/Figure.astro';
 
 
-Routines are the part of OpenMausBot that pays for itself: say "every morning at 9, put these numbers together for me", and the bot builds the schedule, writes the script, and then wakes up on its own each day. It only talks to you when there is a result or a problem.
+Routines are the part of OpenMausBot that pays for itself: say "every morning at 9, put these numbers together for me", and the bot builds the schedule, writes the script, and then wakes up on its own each day. You can also have it talk to you only when there is a result or a problem.
 
 This page covers how that actually runs, where it breaks, and how to stop it from pestering you.
 
@@ -42,9 +43,9 @@ Before handing it over, decide what "something happened" means. Leave that out a
 
 ## In the app
 
-Under **Automations → Schedule**, pick **Monthly**, **Yearly** or **Custom cron (advanced)**. A new routine uses your browser's time zone, and you can change it. A saved routine keeps its own zone even when you open it on another computer.
+Open the routine editor: in the simple interface, click the bot's name at the top of the chat and choose **Add a routine** under **Routines** in its profile; in the advanced interface, click **New** under **Tools → Automations** in the sidebar. The basic choices are **Once**, **Every day**, **Weekdays** and **Every week**; **More options** adds **Monthly**, **Yearly** and **Custom cron (advanced)**. A new routine uses your browser's time zone, and you can change it. A saved routine keeps its own zone even when you open it on another computer.
 
-**Run now** starts it immediately. The switch pauses and resumes it.
+In the advanced interface, open a routine on the **Automations** page and click **Run now** to run it immediately. The switch on the routine's card pauses and resumes it.
 
 ## Writing cron
 
@@ -60,7 +61,7 @@ Five fields: **minute hour day-of-month month day-of-week**. `L` (last day), `W`
 
 Traps:
 
-- The finest resolution is one minute. For "every 90 minutes", use an interval schedule, not `*/90`. That means "minute 0 and minute 90", and there is no minute 90.
+- The finest resolution is one minute. For "every 90 minutes", use an interval schedule, not `*/90`: cron fields describe positions on the clock, so `*/90` is not "every 90 elapsed minutes".
 - Restricting both day-of-month and day-of-week means either matches, as in standard cron. Leave one as `*` if you mean only the other.
 - **Dates that do not exist are skipped**: the 31st skips short months, February 29 runs in leap years. Use `L` for "last day of every month".
 - **Daylight saving** never runs twice: a gap moves the wall-clock time forward, and a repeated hour runs once, at its first occurrence.
@@ -83,9 +84,10 @@ Unattended runs (scheduled, webhook or Run now) handle these by themselves:
 | The engine stalled, the provider rate-limited it, or OpenMausBot restarted | Waits 15 seconds (a minute after a rate limit), then runs once more in the same conversation, told to check what the first attempt already did. A second failure fails it |
 | The run was cut off by a shutdown | Picked up once on the next start as the same run, without creating a copy |
 | The bot or conversation was busy | Checks every 30 seconds, for up to an hour |
-| Out of quota on one AI, another can carry on | Restarts on that AI. Claude says when its quota resets, and a reset within 12 hours puts the run just after it |
+| Out of quota on one AI, another can carry on | Restarts on that AI after a short wait, and tells you once which AI it is using |
+| Out of quota and no other AI can carry on | No retry. If the limit says when it resets (Claude Code does) and that is within 12 hours, the run is put back for just after the reset |
 
-When the problem is a signed-out AI, out of credit, or a tool that needs your approval, it does not retry blindly: you get one notification per bot and cause saying what to do.
+When the problem is a signed-out AI, no credit left, a payment required, a usage limit nothing can carry on from, or an engine that needs setting up, it does not retry blindly: you get one notification per bot and cause saying what to do, and no more until one of that bot's runs completes.
 
 **A run that needs approval waits for you.** Its card and the log say what it waits for ("Waiting for your approval to use…"), and the waiting time does not count against the run limit. If the engine's own wait times out, the run stops with "nobody answered the approval" and you are notified.
 
@@ -103,11 +105,11 @@ To go further, a routine can name **checks** (calendar, mail, another routine's 
 
 ## Check it worked
 
-The **Automations** page shows the next run time, recent results, how long each run waited and whether it is waiting for your approval.
+Simple interface: the routine's card under **Routines** in the bot's profile shows the next run time, and **Run logs** shows each run's result. Advanced interface: the **Automations** page lists every routine's next run time; open one for its run log, and a run waiting for approval says what it waits for.
 
 ## Common problems
 
-**It runs on time but never finishes.** It is probably stuck on an approval. An unattended bot needs **Full access**, or it waits for a card nobody will answer. See [approval levels](/concepts/approval-levels/).
+**It runs on time but never finishes.** It is probably stuck on an approval. An unattended bot needs **Just do it**, or it waits for a card nobody will answer. See [approval levels](/concepts/approval-levels/).
 
 **The time is wrong after moving to another computer.** A saved cron keeps its own time zone. Check which one you wrote. New routines follow your browser until you set one.
 

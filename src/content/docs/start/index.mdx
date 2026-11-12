@@ -1,7 +1,7 @@
 ---
 title: Your first working bot in 15 minutes
 description: Install OpenMausBot on a Mac, use the Claude or Codex login you already have, and go from a first message to a first scheduled routine.
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 1
   label: Quickstart
@@ -27,9 +27,9 @@ You need a Mac and a Claude (Pro or Max) or ChatGPT subscription. It is quickest
 
    You'll see a chat app with one contact on the left: **MausBot**.
 
-2. **Check it found your engine**
+2. **Connect your AI**
 
-   On first launch it asks you to connect an AI. Pick the Claude or Codex you already use: if it is signed in on this Mac it is reused. If not, you sign in on their own website. No new account needed.
+   On first launch it asks you to **Connect an AI** (this site calls these "engines"). Pick the Claude or Codex you already use: if it is signed in on this Mac it is reused. If not, you sign in on their own website. No new account needed.
 
 3. **Say hello**
 
@@ -39,7 +39,7 @@ You need a Mac and a Claude (Pro or Max) or ChatGPT subscription. It is quickest
    In one sentence: which model are you, and what can you do for me?
    ```
 
-   A few seconds later it answers and names its model. The whole chain works: app → your local `claude` / `codex` process → model → back.
+   Once it answers, the whole chain works: app → your local `claude` / `codex` CLI → model → back. OpenMausBot uses the CLI already signed in on your Mac, with no other service in between.
 
 4. **Give it a real job**
 
@@ -48,22 +48,23 @@ You need a Mac and a Claude (Pro or Max) or ChatGPT subscription. It is quickest
    with links, and send them to me. Run it once now so I can see it.
    ```
 
-   It runs the job right away and sends you the five summaries, then creates a routine for itself.
+   It usually runs the job right away and sends you the five summaries, then creates a daily 9:00 routine for itself. A card appears in the chat with the schedule and the next few run times.
 
 5. **Check the routine exists**
 
-   Open **Automations** (lightning icon) in the sidebar. There is a daily 9:00 routine, with its next run time and a button to run it now.
+   - **Simple interface** (the default on a new install): click **MausBot** at the top of the chat. Under **Routines** in the profile on the right you see the routine and its next run time.
+   - **Advanced interface**: click **Automations** under **Tools** in the sidebar. Open the routine to see its next run time, or click **Run now** to run it once.
 
 </Steps>
 
-You now have a bot that works every day and only pings you when there is a result. Your first briefing arrives tomorrow at 9.
+You now have a bot that works for you every day. Your first briefing arrives tomorrow at 9.
 
 :::caution[On a Mac, bots have your permissions]
-New bots start at **Full access**: they run commands without asking, as your macOS user, and can read your personal files. To have a bot ask first, set it to **Ask for approval** under **Bot settings → Permissions**; [approval levels](/concepts/approval-levels/) explains the four. For long-term use, move bots to [a separate server](/guides/home-server/).
+New bots start at **Just do it**: they run commands without asking, as your macOS user, and can read your personal files. To have a bot ask first, click the bot's name at the top of the chat, then the gear icon, and in **Bot settings** pick **Ask me first** under **Before \{bot\} acts**; [approval levels](/concepts/approval-levels/) explains the four. For long-term use, move bots to [a separate server](/guides/home-server/).
 :::
 
 :::note[Routines don't run while the Mac sleeps]
-The machine has to be on. For 24/7 reliability see [where your bots should run](/concepts/where-to-run/).
+The app on your computer runs the schedule, so a sleeping computer or a quit app runs nothing, and the app can't wake a sleeping Mac. While plugged in, it keeps the Mac from idle-sleeping for the hour before a routine is due, but a closed lid still sleeps. For 24/7 reliability see [where your bots should run](/concepts/where-to-run/).
 :::
 
 <Figure name="quickstart" alt="Black ink line drawing: an open laptop whose blank screen shows one glowing green dot, with a small robot beside it raising both fists in quiet celebration." />

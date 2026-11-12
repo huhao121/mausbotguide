@@ -42,8 +42,8 @@
   <text x="380" y="576" fill="var(--text-muted)" font-size="12" text-anchor="middle">只有你能做</text>
 
   <rect x="270" y="620" width="220" height="60" rx="8" fill="var(--color-secondary-fill)" stroke="var(--color-secondary-stroke)" stroke-width="1.5"/>
-  <text x="380" y="646" fill="var(--text)" font-size="14" font-weight="600" text-anchor="middle">按 Bot 限制工具</text>
-  <text x="380" y="666" fill="var(--text-muted)" font-size="12" text-anchor="middle">机器人设置 → 访问</text>
+  <text x="380" y="646" fill="var(--text)" font-size="14" font-weight="600" text-anchor="middle">按 Bot 设置能用什么</text>
+  <text x="380" y="666" fill="var(--text-muted)" font-size="12" text-anchor="middle">可使用的应用 · 高级模式：访问</text>
 
   <rect x="260" y="710" width="240" height="60" rx="8" fill="var(--color-secondary-fill)" stroke="var(--color-secondary-stroke)" stroke-width="1.5"/>
   <text x="380" y="736" fill="var(--text)" font-size="14" font-weight="600" text-anchor="middle">让 Bot 列出三封未读邮件</text>

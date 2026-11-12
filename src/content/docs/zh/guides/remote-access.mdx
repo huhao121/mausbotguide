@@ -24,7 +24,7 @@ import Diagram from '../../../../components/Diagram.astro';
 | | Tailscale（`--tailscale`） | OpenMausBot 托管隧道（`--tunnel`） | 自己的域名（`--domain` 或 `--public-url`） |
 |---|---|---|---|
 | 谁能访问 | 只有你 tailnet 里的设备 | 任何拿到配对码的人 | 任何拿到配对码的人 |
-| 前提 | 服务器和各设备都装 Tailscale | 一个 OpenMausBot 账号（邮箱验证码） | 一个托管在 Cloudflare 的域名 |
+| 前提 | 服务器和各设备都装 Tailscale | 一个 OpenMausBot 账号（邮箱验证码） | `--domain`：域名解析到这台机器，开放 80 和 443 端口；`--public-url`：前面已经有 HTTPS（cloudflared、Caddy、nginx 等） |
 | 手机要装 App 吗 | 要装 Tailscale | 不用 | 不用 |
 | 适合谁 | **注重隐私** | 最快拿到公网地址 | 想要自己掌控的公网地址 |
 
@@ -42,7 +42,7 @@ import Diagram from '../../../../components/Diagram.astro';
    再运行 `openmausbot service install --tailscale`，并执行它打印的命令重新加载、重启服务。
 3. 在这台电脑上验证：https://<名字>.<tailnet>.ts.net/api/health 返回 {"app":"openmausbot"...}。
 4. 用 `openmausbot pair --label "<设备名>" --public-url https://<名字>.<tailnet>.ts.net` 生成配对链接，
-   这台电脑一个、我的手机一个，一个一个给我（每个只有 5 分钟有效）。
+   这台电脑一个、我的手机一个，一个一个给我（每个 10 分钟内有效）。
 5. 关掉这台电脑上原来那条 SSH 隧道进程。
 
 不要改服务器的 DNS、路由和 exit node。
@@ -64,6 +64,5 @@ import Diagram from '../../../../components/Diagram.astro';
 ## 常见问题
 
 - **切换之后服务一直崩溃重启。** 日志写着 `Tailscale refused: on Linux run sudo tailscale set --operator=$USER once`，对应的就是提示词里的第 2 步。
-- **手机能打开页面，但一直卡在“正在连接”。** 用流量上网时，Tailscale 打不通直连，改走中继（DERP），往返延迟明显变高。页面能加载，但实时事件流跟不上。用 `tailscale ping <手机>` 看到 `via DERP`，说明连接确实走了中继。常见原因是手机在运营商 NAT 后面，或者网络规则让 Tailscale 找不到直连路线。
-- **在代理后面，Cloudflare Tunnel 也可能连不上。** `cloudflared` 报 `TLS handshake with edge error: EOF`，通常是代理干扰了隧道连接。这时可以让 Tailscale 的 UDP 流量绕过代理。前提是你清楚自己的网络规则，规则写得太宽，可能影响其他流量的线路。
-- **添加到主屏幕要用系统浏览器：** iPhone 用 Safari，Android 用 Chrome。
+- **手机能打开页面，但一直卡在“正在连接”。** 用流量上网时，如果 Tailscale 打不通直连，会改走中继（DERP）。中继比直连慢，页面能加载，实时事件流却可能跟不上。在服务器上运行 `tailscale status`，手机那一行如果写着 `relay "…"`，就是在走中继。硬 NAT 和防火墙是打不通直连的常见原因。
+- **想在手机上像 App 一样打开：** iPhone 在 Safari 里把网页添加到主屏幕；Android 在 Chrome 右上角菜单里选「安装」。

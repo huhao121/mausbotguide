@@ -1,13 +1,13 @@
 ---
 title: OpenMausBot CLI 参考
-description: openmausbot 常用命令一览：环境检查、服务、配对、给 Bot 派活、团队文件、引擎、令牌和 MCP。设置界面能做的事，命令行基本都能做。
-verifiedOn: 0.1.146
+description: openmausbot 常用命令一览：环境检查、服务、配对、给 Bot 派活、团队文件、引擎、令牌和 MCP。
+verifiedOn: 0.1.152
 sidebar:
   order: 1
   label: CLI 参考
 ---
 
-设置界面能做的事，`openmausbot` 命令行基本都能做，而且适合交给 AI Agent 去执行。任何命令都可以用 `openmausbot help <命令>` 查看详细用法，完整说明请参阅[官方文档](https://github.com/milind-soni/OpenMausBot/blob/main/docs/headless-cli.md)。
+配服务器、派活、改团队这些常用操作都能用 `openmausbot` 命令行完成，适合交给 AI Agent 去执行。任何命令都可以用 `openmausbot help <命令>` 查看详细用法，完整说明请参阅[官方文档](https://github.com/milind-soni/OpenMausBot/blob/main/docs/headless-cli.md)。
 
 ## 服务器
 
@@ -22,9 +22,9 @@ sidebar:
 
 | 命令 | 作用 |
 |---|---|
-| `openmausbot pair --label "设备名"` | 生成一次性配对码（5 分钟有效）；加 `--public-url https://…` 生成带地址的链接 |
+| `openmausbot pair --label "设备名"` | 生成一次性配对码（10 分钟有效）；加 `--public-url https://…` 生成带地址的链接 |
 | `openmausbot connect <URL> --code <码> --out <文件>` | 从另一台机器拿到访问令牌 |
-| `openmausbot sessions` | 列出所有已配对的设备和会话 |
+| `openmausbot devices` | 列出已配对的设备；`devices revoke <ID>` 让某台设备退出登录 |
 | `openmausbot token create "名字" --expires 90d --out <文件>` | 给脚本或 CI 用的令牌，到期自动失效；`token list` 查看、`token revoke` 吊销 |
 
 ## 给 Bot 派活
@@ -46,7 +46,7 @@ sidebar:
 | 命令 | 作用 |
 |---|---|
 | `openmausbot team export --out team.yaml` | 把现有的 Bot、房间、模型、权限导出成文件 |
-| `openmausbot team apply team.yaml --check` | 只预览会改什么，不实际修改 |
+| `openmausbot team apply team.yaml --dry-run` | 只预览会改什么，不实际修改；`--check` 有改动时以退出码 6 结束，适合 CI |
 | `openmausbot team apply team.yaml` | 按文件修改工作区，使两者一致 |
 | `openmausbot models` | 每个引擎能用的模型 |
 | `openmausbot channels` | 你的房间列表 |
@@ -54,7 +54,7 @@ sidebar:
 | `openmausbot engine set <引擎> --key-env <环境变量>` | 不通过界面，直接给引擎配置 API key；`--rotate` 替换已有的 key |
 | `openmausbot engine list` | 列出引擎，以及每个引擎有没有配 key |
 
-`engine set` 支持 `claude`、`openai`、`openrouter`、`openai-compatible`（要带 `--base-url`）、`xai`、`groq`、`greenference`、`mistral`、`cerebras`。写进去的 key 不会回显。
+`engine set` 支持 `claude`、`openai`、`openrouter`、`openai-compatible`（要带 `--base-url`）、`xai`、`groq`、`greenference`、`modelgo`、`mistral`、`cerebras`。key 从环境变量（`--key-env`）或文件（`--key-file`）读取，不会回显。
 
 ## 供脚本和其他 Agent 调用
 

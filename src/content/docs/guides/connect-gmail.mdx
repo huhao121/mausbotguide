@@ -1,7 +1,7 @@
 ---
 title: How to connect Gmail to OpenMausBot
 description: Let a bot read, search and draft your Gmail. Authorize directly on desktop, add a Composio project key on a self-hosted server, then limit tools per bot.
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 7
   label: Connect Gmail
@@ -70,13 +70,21 @@ End with a table: connection status, account label, and which Gmail tools this b
 
 Skip this part on desktop and MausBot Cloud.
 
+Until you add the key, the **Connect apps** window shows a notice at the top and every **Connect** button is gray:
+
+![Apps window searched for Gmail: a notice at the top says connected apps are not set up yet, and the Connect button on the Gmail row is gray](../../../assets/screenshots/connect-gmail/apps-window.en.png)
+
 1. Open the [Composio dashboard](https://dashboard.composio.dev), switch to `Platform`, select or create a project, and go to `Settings → API Keys`.
 2. Create a key and copy the string starting with `ak_`. The default permissions work. For least privilege you only need Sessions read and write, Toolkits read, and Connected accounts read and write.
-3. Back in OpenMausBot, open **Settings → AI → API keys** and paste it into **Composio project key**. It saves and checks itself.
+3. Back in OpenMausBot, open **Settings → AI**, expand **API keys**, and find **Composio project key** under **Apps and tools**. Paste the key there. It saves and checks itself.
+
+   ![Settings → AI → API keys → Apps and tools: the Composio project key field with the placeholder ak_…](../../../assets/screenshots/connect-gmail/composio-key.en.png)
+
+   The notice in the window says "Self-host connected apps", but the group in settings is called **Apps and tools**.
 
 ### Connect the account
 
-1. At the bottom left of the app, click **Connect apps**. Once you have an app connected, this button is called **Apps**. In the window that opens, search for Gmail and click **Connect**.
+1. At the bottom left of the app, click **Connect apps**. Once you have an app connected, or in the advanced interface, this button is called **Apps**. In the window that opens, search for Gmail and click **Connect**.
 2. Give the account a label such as `work` or `personal`. Every account needs one, and it's how you tell two mailboxes apart later.
 3. Sign in to Google on the page that opens. Tick Gmail and the permission to see your email address. Contacts, birthday and phone number have nothing to do with mail.
 4. Back in the app, click **Connected** at the top right of the window. The account is listed there.
@@ -87,7 +95,10 @@ One app can hold up to 5 accounts. Use **Add account** for another. **Disconnect
 
 Google's consent page says the app can read, compose, send and permanently delete your mail. You can't narrow that on Google's side, so limit it per bot in OpenMausBot.
 
-Open the bot's **Bot settings → Access → Connected apps**, check that **Allow this bot to use connected apps** is on, then expand Gmail and choose under **Per-app tools**.
+- **Simple interface**: open the bot's **Bot settings → Apps it can use** and turn Gmail on. Apps left off are out of this bot's reach. It is only on or off: once on, the bot can use every Gmail tool (read and write). To give it only some, use the advanced interface.
+- **Advanced interface**: in the sidebar, click **…** next to the bot → **Edit Profile**, expand **Access**, and under **Connected apps** set Gmail to **Off**, **Read** or **Read & write**. Then expand Gmail and tick tool classes under **Per-app tools**.
+
+Tick by what the bot does:
 
 | What this bot does | Suggested tools |
 |---|---|
@@ -111,7 +122,7 @@ If it lists real emails, the connection and the permissions both work. Google us
 
 - **The Connect button is gray and says connected apps are not set up on the host.** The self-hosted server has no project key yet. Add one using the steps above and the button becomes clickable.
 - **You copied the wrong key from Composio.** A key starting with `ck_` is a consumer key for MCP clients. OpenMausBot wants a project key starting with `ak_`. Switch the dashboard to `Platform` and open API Keys in the project settings. You can ignore `Add Custom MCP`.
-- **An app password keeps getting rejected.** Google shows the 16 characters in four groups. Remove the spaces when you paste, and check you didn't enter your Google login password. Accounts with Advanced Protection may not offer app passwords at all.
-- **The bot says its model can't use connected apps.** Settings shows **This bot's current model cannot use connected apps**. Switch it to another model.
+- **An app password keeps getting rejected.** An app password is 16 digits. If your copy has spaces in it, remove them when you paste, and check you didn't enter your Google login password. Accounts with Advanced Protection may not offer app passwords at all.
+- **The bot says its model can't use connected apps.** Settings shows "The model (bot name) runs on can't use apps." (the advanced interface says **This bot's current model cannot use connected apps**). Switch it to another model.
 - **Creating a filter or setting up forwarding gets refused.** The error is `403 ACCESS_TOKEN_SCOPE_INSUFFICIENT`. The default connection doesn't ask for those permissions, and reconnecting won't help. Add them with your own OAuth app under `Auth Configs` in Composio, then reconnect the account.
 - **You want a bot to run on each new email, but the server can't do it.** A server using its own Composio project key can't watch app events yet. Use a routine that checks the mailbox on a schedule instead. See [how to set up routines](/guides/routines/).

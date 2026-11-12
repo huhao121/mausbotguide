@@ -9,7 +9,7 @@ sidebar:
 
 import Figure from '../../../components/Figure.astro';
 
-If you pay for Claude, ChatGPT (Codex), Google AI (Antigravity) and OpenCode Go like we do, you probably jump between CLIs all day. None of the quotas get used up, and it's hard to say which job belongs where.
+If you pay for Claude, ChatGPT (Codex) and OpenCode Go and also use Gemini (Antigravity) like we do, you probably jump between CLIs all day. None of the quotas get used up, and it's hard to say which job belongs where.
 
 With OpenMausBot, each subscription becomes one or more bots, and you direct them from one chat app. It drives the CLIs already signed in on your computer or server, so you don't need new accounts and your requests don't go through a proxy.
 
@@ -19,19 +19,19 @@ With OpenMausBot, each subscription becomes one or more bots, and you direct the
 
 | Engine / subscription | Model | Used for | Why |
 |---|---|---|---|
-| OpenCode Go | DeepSeek V4.1 Flash | Default bot, daily report, odd jobs | Subscription, cheap and fast, good at Chinese; fine to run all day |
-| Antigravity (Google AI) | Gemini 3.8 Flash | Research, topic tracking | Strong multimodal: watches videos, reads pages |
-| Claude Code / Codex (separate setup on a Mac) | Claude, GPT models | Coding, heavy work | Already signed in on the Mac; works the moment the app opens |
+| OpenCode Go | DeepSeek V4.1 Flash | Most bots on the server: the Chief, the daily report and odd jobs | A subscription, fine to run all day |
+| Antigravity (Gemini) | Gemini 3.8 Flash | Bots that watch videos and research | Understands video directly |
+| Claude Code (separate setup on a Mac) | Claude Sonnet 5, Opus 5.5 | The Mac's Chief and two other bots | Already signed in on the Mac; works the moment the app opens |
 
-On the Mac, the default Chief and one day-to-day bot run Claude Sonnet 5, one bot runs Opus 5.5 for heavy work, Codex handles the coding, and two bots run DeepSeek on OpenCode Go for small jobs. They all run on one machine without getting in each other's way.
+Of the 51 bots on the server, 39 run DeepSeek and 10 run Gemini. The Mac has 5 bots: the Chief and one other run Claude Sonnet 5, one runs Opus 5.5, and two run DeepSeek on OpenCode Go.
 
 We put daily work on cheap subscription models and save the strong ones for occasional heavy work. That way every quota gets used and no single one runs dry.
 
 ## Connect your subscriptions
 
 - On a Mac, the `claude` and `codex` you're signed in to are detected automatically. See the [quickstart](/start/).
-- On a server, sign each engine in once. Codex and Kimi use device codes, and an OpenCode login can be piped over from your Mac. See [how to sign in to engines](/guides/sign-in-engines/).
-- Any OpenAI-compatible API (DeepSeek's API, local LM Studio) can be added as an engine in settings, with no code.
+- On a server, sign each engine in once. Codex and Kimi use device codes, and OpenCode signs in with an API key. See [how to sign in to engines](/guides/sign-in-engines/).
+- Any OpenAI-compatible API (DeepSeek's API, local LM Studio) can be added as an engine under **Settings → AI → API keys → Your own model servers**, with no code.
 
 Once connected, open the model selector at the top of any chat to see which models this machine can use.
 
@@ -52,7 +52,7 @@ Look up the exact model name with openmausbot models first; don't guess. Then te
 ```
 
 :::caution[Same name, different bill]
-In OpenCode, `Go · DeepSeek V4.1 Flash` uses your Go subscription; `Zen · DeepSeek V4.1 Flash` bills your Zen balance per token. Check the prefix before you pick.
+In OpenCode, `Go · DeepSeek V4.1 Flash 1017` uses your Go subscription; `Zen · DeepSeek V4.1 Flash 1017` bills your Zen balance by usage. Check the prefix before you pick.
 :::
 
 ## See where the quota goes
@@ -65,8 +65,8 @@ A few things are easy to misread:
 
 - Claude reports both the 5-hour and the weekly window, each with a reset countdown.
 - Our Codex Pro plan reports only the weekly window, so its 5-hour row says "Not reported by this plan" even though it's signed in. OpenMausBot shows whichever windows OpenAI returns for your plan, so yours may differ.
-- One subscription can show up twice. Our machine has both a Codex and a ChatGPT instance (both driving the same `codex` CLI), and the page lists them separately with the same numbers.
-- Pay-per-token endpoints show a monthly spend and a per-model breakdown. Subscription plans show percentages.
+- The same quota can appear on two rows. Ours shows "Claude" and "Claude (API key)" with identical numbers.
+- **Where it went**, higher on the page, lists cost by bot, model and more, for today, the last 7 days, this month and other periods. Subscription plans show percentages left under **Plan usage**.
 
 Give more bots to the subscription with the most headroom.
 

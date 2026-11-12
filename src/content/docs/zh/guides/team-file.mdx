@@ -1,7 +1,7 @@
 ---
 title: 如何用团队文件批量配置 Bot
 description: 怎么在 OpenMausBot 里给 Bot 分工（响应快的聊天 Bot、带电脑的操作 Bot、定时巡检 Bot），以及怎么从命令行或通过 MCP 从 Claude Code 调用它们。
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 4
   label: 用团队文件配置 Bot
@@ -10,7 +10,7 @@ sidebar:
 import Figure from '../../../../components/Figure.astro';
 import Diagram from '../../../../components/Diagram.astro';
 
-一个什么都干的 Bot，干什么都慢。更好的做法是用几个 Bot，各负责一类事，每个只给它需要的工具。
+一个什么都干的 Bot，每一轮都要带着全部工具。更好的做法是用几个 Bot，各负责一类事，各配合适的模型和电脑。
 
 <Figure name="team-file" alt="三联几何海报：三个一模一样的机器人，各自只拿一样工具：一个举着对话气泡，一个握着连到显示器的鼠标，一个在时钟下打着手电。" />
 
@@ -25,11 +25,11 @@ import Diagram from '../../../../components/Diagram.astro';
 
 | Bot | 模型 | 工具 | 用来干什么 |
 |---|---|---|---|
-| **聊天 Bot** | 快、便宜，低思考强度 | 只有 shell 和文件，**不给电脑** | 问答、写作、总结，几秒就回 |
+| **聊天 Bot** | 快、便宜，低思考强度 | **不给电脑** | 问答、写作、总结 |
 | **操作 Bot** | 强模型 | 浏览器 + 一台电脑（本地 VM） | 操作网页、截图，以及任何需要“看”的事 |
 | **巡检 Bot** | 最便宜的模型 | 定时任务需要什么就给什么 | 定时检查，有变化才汇报 |
 
-为什么要分开：Bot 有的每个工具都会写进每一次提示词，工具越多，它绕远路的机会也越多。每个 Bot 只给它这份工作需要的工具，任务就短。详见[为什么 Bot 一个任务要跑几十分钟](/zh/concepts/long-tasks/)。
+为什么要分开：Bot 有的每个工具都会写进每一次提示词。不需要电脑的 Bot 不给电脑，提示词就更短。想再收窄工具，用下面表格里的 `tools:` 字段；Claude、Codex 这类引擎只能用它限制 MCP 工具，而且它不是文件或 shell 的权限隔离。详见[为什么 Bot 一个任务要跑几十分钟](/zh/concepts/long-tasks/)。
 
 ## 交给 AI Agent
 
@@ -42,7 +42,7 @@ OpenMausBot 支持用团队文件配置，所以 Agent 不用点任何界面就�
 - "操作 Bot"：模型 <强模型>，computer: vm，approval: ask。
 - "巡检 Bot"：模型 <最便宜的模型>，computer: browser，approval: full（它无人值守运行，没人能批审批卡片）。
 
-先把当前团队导出成文件，应用之前用 team apply --check 把差异给我看。
+先把当前团队导出成文件，应用之前用 team apply --dry-run 把会改什么给我看。
 然后给“巡检 Bot”建一个定时任务：每个工作日早上 9 点（按我的时区），检查 <要检查什么>，有变化才发一条简短总结。
 最后用 `openmausbot run "<Bot 名>" "<一个小任务>"` 证明每个 Bot 都能干活，把回复给我看。
 ```
@@ -51,7 +51,7 @@ OpenMausBot 支持用团队文件配置，所以 Agent 不用点任何界面就�
 
 <Diagram name="team-file" alt="team.yaml 分三部分：defaults 是所有 Bot 的默认值，bots 每个 Bot 单独一项，写明模型、审批级别、电脑和常驻指令，rooms 写成员和共享指令。" />
 
-团队文件描述整个工作区：有哪些 Bot、各自的模型、审批级别和电脑、常驻指令，有哪些房间，以及用到的引擎。下面是一个完整、可用的例子：
+团队文件描述整个工作区：有哪些 Bot、各自的模型、审批级别和电脑、常驻指令，有哪些房间，以及用到的引擎。下面是一个完整的例子。模型、目录和技能文件都要换成你服务器上真实存在的：
 
 ```yaml title="team.yaml"
 version: 1
@@ -69,9 +69,9 @@ teams:
 bots:                         # 至少一个
   - name: Chat
     team: Content
-    model: claude/claude-sonnet-5         # 引擎实例/模型，写法与 `openmausbot models` 的输出一致
+    model: claude/claude-sonnet-5         # 引擎实例/模型，换成 `openmausbot models` 列出的
     effort: low                           # none | low | medium | high | xhigh | max
-    approval: full
+    approval: ask
     computer: off
     soul: |                               # 常驻指令：每一轮都会带上
       你负责日常问答和写作。回答简短，结论放在最前面。
@@ -112,10 +112,10 @@ rooms:
 |---|---|
 | `engines:` | 可选，需要完全访问权限。密钥必须写成 `{ env: 变量名 }` 或 `{ file: 路径 }`；直接写在文件里的密钥会被拒绝 |
 | `defaults:` | 对每个没单独设置该字段的 Bot 生效 |
-| `approval:` | 新建的 Bot 默认是 `full`。无人值守的 Bot 需要它，见[审批级别](/zh/concepts/approval-levels/) |
+| `approval:` | 新建的 Bot 默认是 `full`（公司托管的共享工作区默认 `ask`）。无人值守的 Bot 怎么设，见[审批级别](/zh/concepts/approval-levels/) |
 | `cwd:` | 必须是服务器上存在的绝对路径；`~` 会被拒绝，因为它在服务器上可能指别的地方 |
 | `soul:` | 常驻指令，最多 24,000 字节；也可以用 `{ file: 路径 }` 放到单独的文件里 |
-| `tools:` | `{ allow: [...] }` 或 `{ deny: [...] }` 收窄 Bot 能用的工具；不写就是全部 |
+| `tools:` | `{ allow: [...] }` 或 `{ deny: [...] }` 收窄 Bot 能用的工具；写 `{}` 表示全部工具，不写则保持现状。Claude、Codex 这类引擎只能限制 MCP 工具（`mcp:服务器:工具`） |
 | `prune: true`（写在团队上） | 只有标了这一项的团队，`--prune` 才会删掉文件里不再列出的 Bot 和房间 |
 
 应用团队文件时要知道这几点：
@@ -137,5 +137,5 @@ rooms:
 ## 日常使用建议
 
 - 一件事一个会话，每个任务开一个新会话。
-- 审批级别要明确设置。新建的 Bot，不管是在界面里建的还是用团队文件建的，默认都是 `full`（完全访问），所以每个 Bot 都写上 `approval:`。跑例行任务的 Bot 需要 `full`，否则会卡在没人批的审批卡片上。想先过目的 Bot 用 `ask`（请求批准）。`edits`（自动接受编辑）只有 Claude、Antigravity、Grok 等引擎提供，OpenCode 和 Codex 没有。如果服务端跑在你的 Mac 上，Bot 以你本人的身份运行，更要从严。
-- 自托管服务器上，已连接的应用默认全是灰的，要先在 **设置 → AI → API 密钥 → 自建已连接应用服务** 里填 **Composio 项目密钥**。在那之前，用 CLI 往往更简单：在服务器上装 `gh`，用设备码登录一次，Bot 马上就能用 GitHub。注意：自托管的 Composio 密钥只能调用应用的工具，暂时不能监听应用事件。“当某件事发生时”这类需求用 webhook。
+- 审批级别要明确设置。新建的 Bot，不管是在界面里建的还是用团队文件建的，默认都是 `full`（界面上叫「直接执行」；公司托管的共享工作区默认 `ask`），所以每个 Bot 都写上 `approval:`。跑例行任务的 Bot 如果是 `ask`，遇到要审批的操作就会停下来等没人批的卡片，等超时还会停止；碰不到敏感东西的用 `full`。想先过目的 Bot 用 `ask`（先问我）。`edits`（自动接受编辑）只有 Claude、Antigravity、Grok 等引擎提供，OpenCode 和 Codex 没有。如果服务端跑在你的 Mac 上，Bot 以你本人的身份运行，更要从严。
+- 自托管服务器上没填密钥时，已连接的应用会提示「尚未设置已连接的应用」，要先在 **设置 → AI → API 密钥 → 应用与工具** 里填 **Composio 项目密钥**。在那之前，用 CLI 往往更简单：在服务器上装 `gh`，用一次性代码在浏览器里登录一次，Bot 马上就能用 GitHub。注意：自托管的 Composio 密钥只能调用应用的工具，暂时不能监听应用事件。“当某件事发生时”这类需求用 webhook。

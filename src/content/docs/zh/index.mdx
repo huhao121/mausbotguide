@@ -27,7 +27,7 @@ import Figure from '../../../components/Figure.astro';
 		服务器在家里跑，你在地铁上打开手机就能看到每个 Bot 在做什么，审批卡片点一下就能放行。
 	</Card>
 	<Card title="到点自己干活" icon="clock">
-		定时任务到点自动开工，只在有结果时才找你。比如下面这份每天早上 9 点送到飞书群的日报。写法见[定时任务](/zh/guides/routines/)。
+		定时任务到点自动开工，也可以设成只在有结果时才找你。比如下面这份每天早上 9 点送到飞书群的日报。写法见[定时任务](/zh/guides/routines/)。
 	</Card>
 	<Card title="一支会互相配合的团队" icon="comment-alt">
 		一件事配一个 Bot，各管一摊。它们能把问题转给彼此，不用什么都来找你。
@@ -38,7 +38,7 @@ import Figure from '../../../components/Figure.astro';
 
 ![GSC 日报卡片：7 天点击、展示、CTR 和 30 天趋势](../../../assets/recipes/gsc-daily-report-hero.png)
 
-我们有一个 Bot，每天早上把多个 Google 账号下所有站点的 Search Console 数据合成一份日报，推到飞书群里。这件事从开口说需求到稳定运行，只花了几个小时：代码、数据库、定时任务、飞书机器人，都是 Bot 自己搭的。上图是 Bot 生成的日报图（演示数据），群里收到的是内容相同的飞书交互卡片。
+我们有一个 Bot，每天早上把多个 Google 账号下所有站点的 Search Console 数据合成一份日报，推到飞书群里。代码、数据库、定时任务都是 Bot 自己搭的，我们做的是 Google Cloud 里的几步配置、给每个 Google 账号授权，以及在飞书群里加一个机器人。上图是 Bot 生成的日报图（演示数据），群里收到的是结构相同的飞书卡片，图表是卡片自带的图表组件。
 
 <LinkCard title="案例：用 Bot 做一份每天自动推送的 GSC 日报" href="/zh/recipes/gsc-daily-report/" />
 
@@ -61,7 +61,7 @@ import Figure from '../../../components/Figure.astro';
 
 3. **[搬到 24 小时在线的服务器](/zh/guides/home-server/)**：定时任务要每天跑，就需要一台常开的机器。一台低功耗小主机就够用。
 
-4. **[遇到问题看故障排除](/zh/reference/troubleshooting/)**：每条都写了原始报错和解决办法。
+4. **[遇到问题看故障排除](/zh/reference/troubleshooting/)**：常见问题的报错和解决办法。
 
 </Steps>
 
@@ -75,9 +75,9 @@ import Figure from '../../../components/Figure.astro';
 		通常是步骤太多：一轮里调用了几十次模型和工具。请参阅[为什么 Bot 一个任务要跑几十分钟](/zh/concepts/long-tasks/)。
 	</Card>
 	<Card title="想用命令行管理一切" icon="seti:shell">
-		[CLI 参考](/zh/reference/cli/)：设置界面能做的事，命令行都能做。
+		[CLI 参考](/zh/reference/cli/)：用命令行配团队、给 Bot 派活、等它做完、查状态。
 	</Card>
 	<Card title="让 AI 替你配置" icon="rocket">
-		每篇操作指南都附有可以直接复制给 Claude Code、Codex、OpenCode 的提示词。
+		大多数操作指南都附有可以直接复制给 Claude Code、Codex、OpenCode 的提示词。
 	</Card>
 </CardGrid>

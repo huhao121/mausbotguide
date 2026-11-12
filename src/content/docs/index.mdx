@@ -27,7 +27,7 @@ Put a team of AI bots to work around the clock. Unofficial OpenMausBot guides wh
 		The server runs at home. On the train you open your phone, see what every bot is doing, and approve a card with one tap.
 	</Card>
 	<Card title="Work that happens on schedule" icon="clock">
-		Routines wake bots up on time and only ping you when there is a result, like the report below that lands in a group chat every morning. See [routines](/guides/routines/).
+		Routines wake bots up on time, and can be set to ping you only when there is a result, like the report below that lands in a group chat every morning. See [routines](/guides/routines/).
 	</Card>
 	<Card title="A team that helps itself" icon="comment-alt">
 		One bot per job, each with its own model, memory and tools. They can hand problems to each other instead of back to you.
@@ -38,7 +38,7 @@ Put a team of AI bots to work around the clock. Unofficial OpenMausBot guides wh
 
 ![GSC daily report: one-line verdict, clicks, impressions, CTR and a 30-day trend](../../assets/recipes/gsc-daily-report-hero.png)
 
-One of our bots merges Search Console data for multiple sites across several Google accounts into a daily report and posts it to a Feishu group. From first request to running reliably took a few hours, and the bot built the code, database, schedule and chat integration itself. The image above is the bot's report rendered with demo data.
+One of our bots merges Search Console data for multiple sites across several Google accounts into a daily report and posts it to a Feishu group. The bot built the code, database and schedule itself; we did a few settings in Google Cloud, consented once per Google account and added a bot to the Feishu group. The image above is the bot's report rendered with demo data; the group receives a Feishu card with the same structure, its charts drawn by the card's own chart components.
 
 <LinkCard title="Use case: a daily Search Console report built by a bot" href="/recipes/gsc-daily-report/" />
 
@@ -61,7 +61,7 @@ One of our bots merges Search Console data for multiple sites across several Goo
 
 3. **[Move to an always-on server](/guides/home-server/)**: routines need a machine that never sleeps. A low-power mini PC is plenty.
 
-4. **[Fix problems fast](/reference/troubleshooting/)**: every entry has the exact message and the fix.
+4. **[Fix problems fast](/reference/troubleshooting/)**: common problems, their error messages and the fixes.
 
 </Steps>
 
@@ -75,9 +75,9 @@ One of our bots merges Search Console data for multiple sites across several Goo
 		Usually it is just many steps: dozens of model calls and tool runs. See [why one task can take an hour](/concepts/long-tasks/).
 	</Card>
 	<Card title="Prefer the command line" icon="seti:shell">
-		The [CLI reference](/reference/cli/): anything the settings screens do, the CLI does too.
+		The [CLI reference](/reference/cli/): set up a team, give a bot a job, wait for it and check status from the command line.
 	</Card>
 	<Card title="Let AI do the setup" icon="rocket">
-		Every how-to guide includes a prompt you can paste into Claude Code, Codex or OpenCode.
+		Most how-to guides include a prompt you can paste into Claude Code, Codex or OpenCode.
 	</Card>
 </CardGrid>
