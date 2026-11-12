@@ -1,7 +1,7 @@
 ---
 title: OpenMausBot 概述
 description: OpenMausBot 把你已经付费的 Claude Code、Codex 等命令行工具变成聊天软件里 24 小时在线的 Bot。它是什么，你需不需要它。
-verifiedOn: 0.1.146
+verifiedOn: 0.1.152
 sidebar:
   order: 0
   label: 概述
@@ -11,20 +11,20 @@ import Diagram from '../../../../components/Diagram.astro';
 
 OpenMausBot（也叫 MausBot）是一个聊天软件，里面的每个联系人都是一个 AI Agent。每个 Bot 有自己的模型、记忆、工作目录和已连接的应用，还可以有一台自己的电脑。你像给同事发消息一样给它派活。它负责干，按你设的审批级别决定要不要先问你，你不在时也能按计划继续工作。
 
-它是开源的（Apache 2.0），定位是 xAI Grok Bot 的开源替代品。
+它是开源的（Apache 2.0），官方把它定位成 xAI Grok Bot 的开源替代品。
 
 ## 工作原理
 
-<Diagram name="how-it-works" alt="你通过桌面 App、浏览器或手机和 OpenMausBot 服务端聊天、审批；服务端为每条消息启动一个真实的 CLI 进程（Claude Code、Codex、OpenCode 或其他引擎），由它调用 shell、文件、浏览器、电脑、已连接的应用和 MCP 等工具。" />
+<Diagram name="how-it-works" alt="你通过桌面 App、浏览器或手机和 OpenMausBot 服务端聊天、审批；服务端把消息交给真实运行的 Agent（Claude Code、Codex、OpenCode 等命令行 Agent，或 OpenAI 兼容接口这类引擎）执行，由它调用 shell、文件、浏览器、电脑、已连接的应用和 MCP 等工具。" />
 
-**它自己不带模型，也不带 Agent**，调用的是服务端机器上装好的 CLI Agent，沿用它们已有的登录。OpenMausBot 负责外面那一层：注入系统提示词、记忆和工具，把各家的输出统一成同一种事件流，再按你设的审批级别，把操作变成需要你确认的审批卡片。
+**它自己不带模型，也不带 Agent**，调用的是服务端机器上装好的命令行 Agent（沿用它们已有的登录），或者你接入的 API。OpenMausBot 负责外面那一层：注入系统提示词、记忆和工具，把各家的输出统一成同一种事件流，再按你设的审批级别，把操作变成需要你确认的审批卡片。
 
 ## 基本概念
 
 - Bot 更像一直在的同事，聊完不会消失。模型、记忆、目录、权限都会一直保留。
 - 一个会话就是一件事。一个 Bot 可以同时开好几个会话并行干活。
-- 每条消息都会在服务端启动一个真实的 Agent 进程，所以那个 CLI 能做的事，Bot 都能做。
-- 要不要先问你，由审批级别决定。新 Bot 默认是完全访问，不问直接做。改成请求批准后，执行命令和改文件前都会先问你。
+- 消息交给服务端上真实运行的 Agent 去做。用命令行 Agent 的 Bot，那个命令行能做的事它都能做。
+- 要不要先问你，由审批级别决定。新 Bot 默认是「直接执行」，不问直接做（公司托管的共享工作区默认是「先问我」）。改成「先问我」后，执行命令和改文件前都会先问你。
 
 ## 支持哪些 AI 工具
 
@@ -34,13 +34,13 @@ OpenMausBot（也叫 MausBot）是一个聊天软件，里面的每个联系人�
 | Codex | 能 | 在服务器上用 device code 登录很顺 |
 | OpenCode | 能 | 复用 OpenCode 已接入的所有模型服务商（Zen、Go、OpenRouter、本地模型） |
 | Kimi CLI、DeepSeek Harness、Grok CLI | 能 | |
-| Antigravity（Gemini） | 能 | 走 Google 官方的 ACP runtime（Agent Client Protocol），需要在 OpenMausBot 里重新登录一次 |
-| 任何 ACP Agent / OpenAI 兼容接口 | 能 | 不用写代码，配置一下就行 |
+| Antigravity（Gemini） | 能 | OpenMausBot 自己安装一份 Antigravity 运行时，和 Antigravity App、`agy` 命令行分开，要在 OpenMausBot 里用 Google 账号再登录一次 |
+| 任何 ACP Agent / OpenAI 兼容接口 | 能 | 不用写代码，在配置文件里加一项就行 |
 | 只有图形界面、没有 CLI 的 App | 不能 | 没有可调用的接口 |
 
 ## 比直接用 CLI 多了什么
 
-1. 你不在也能干活。定时任务（“每个工作日早上 9 点”）、webhook、应用事件都能触发它开工。
+1. 你不在也能干活。定时任务（“每个工作日早上 9 点”）、webhook、应用事件都能触发它开工。应用事件走 OpenMausBot 托管的连接服务，自托管服务器用自己的 Composio 密钥时暂时不支持。
 2. 能同时用好几个。便宜模型做巡检，强模型干重活，结果汇总在一个收件箱里。
 3. 记得住事。每个 Bot 有自己的记忆和技能，会话结束也不会清零。
 4. 能动手。每个 Bot 可以配浏览器和完整桌面，通过 Composio 连接 500 多个应用，也支持 MCP。

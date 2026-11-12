@@ -1,7 +1,7 @@
 ---
 title: How OpenMausBot works
 description: OpenMausBot turns the AI agent CLIs you already pay for, like Claude Code and Codex, into always-on bots in a chat app. What it is and whether you need it.
-verifiedOn: 0.1.146
+verifiedOn: 0.1.152
 sidebar:
   order: 0
   label: Overview
@@ -13,22 +13,22 @@ OpenMausBot (also called MausBot) is a chat app where every contact is an AI age
 model, memory, working folder, connected apps and, optionally, its own computer. You message it like a coworker.
 it works, asks you first if you set it to, and can keep working on a schedule while you are away.
 
-It is open source (Apache 2.0) and positions itself as the open alternative to xAI's Grok Bot.
+It is open source (Apache 2.0), and its maintainers describe it as the open-source alternative to xAI's Grok Bot.
 
 ## How it works, in one picture
 
-<Diagram name="how-it-works" alt="You talk to the OpenMausBot server from the desktop app, browser or phone. For each message the server starts a real CLI process (Claude Code, Codex, OpenCode or another engine), which uses tools such as shell, files, browser, a computer, connected apps and MCP." />
+<Diagram name="how-it-works" alt="You talk to the OpenMausBot server from the desktop app, browser or phone. The server hands messages to a real agent (a command-line agent such as Claude Code, Codex or OpenCode, or an engine such as an OpenAI-compatible API), which uses tools such as shell, files, browser, a computer, connected apps and MCP." />
 
 It does not ship its own model or its own agent. It runs the command-line agents installed on
-the server machine, using their existing sign-ins. OpenMausBot's job is the layer around them: system prompt, memory
+the server machine, using their existing sign-ins, or APIs you connect. OpenMausBot's job is the layer around them: system prompt, memory
 and tools going in. One common event stream coming out. Actions turned into approval cards at the level you set.
 
 ## Mental model
 
 - A bot is a standing coworker, not a chat window. Model, memory, folder and permissions persist.
 - A conversation is one job. One bot can run several in parallel.
-- **Every message starts a real agent process** on the server, so a bot can do anything that CLI can do.
-- Its approval level decides whether it asks first. New bots start at Full access and act without asking. Switch a bot to Ask for approval to review commands and file changes.
+- **Messages run on a real agent** on the server. A bot on a command-line agent can do anything that CLI can do.
+- Its approval level decides whether it asks first. New bots start at Just do it and act without asking (on a hosted company workspace they start at Ask me first). Switch a bot to Ask me first to review commands and file changes.
 
 ## Which of your AI tools can it use?
 
@@ -38,13 +38,13 @@ and tools going in. One common event stream coming out. Actions turned into appr
 | Codex | Yes | Device-code sign-in works well on servers |
 | OpenCode | Yes | Reuses every provider OpenCode is connected to (Zen, Go, OpenRouter, local) |
 | Kimi CLI, DeepSeek Harness, Grok CLI | Yes | |
-| Antigravity (Gemini) | Yes | Uses Google's official ACP runtime; sign in again inside OpenMausBot |
-| Any ACP agent / OpenAI-compatible API | Yes | Configured without code |
+| Antigravity (Gemini) | Yes | OpenMausBot installs its own Antigravity runtime, separate from the Antigravity app and the `agy` CLI; sign in with Google again inside OpenMausBot |
+| Any ACP agent / OpenAI-compatible API | Yes | One entry in the config file, no code |
 | GUI-only apps (no CLI) | No | Nothing to drive |
 
 ## What it adds over using the CLIs directly
 
-1. Unattended work. Routines ("every weekday at 9"), webhooks and app events start jobs without you.
+1. Unattended work. Routines ("every weekday at 9"), webhooks and app events start jobs without you. App events go through OpenMausBot's managed connection service; a self-hosted server using its own Composio key can't watch apps yet.
 2. A team. Cheap model for patrol work, strong model for heavy work, all in parallel, in one inbox.
 3. Persistence. Memory and skills per bot that outlive a session.
 4. Reach. A browser and a full desktop per bot; 500+ apps through Composio; MCP servers.

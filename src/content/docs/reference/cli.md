@@ -1,13 +1,13 @@
 ---
 title: OpenMausBot CLI reference
 description: The openmausbot commands you will actually use, covering host checks, the service, pairing, team files, engines, tokens and MCP.
-verifiedOn: 0.1.146
+verifiedOn: 0.1.152
 sidebar:
   order: 1
   label: CLI reference
 ---
 
-Almost anything the settings screens do, the `openmausbot` CLI does too, and it's what you hand to an AI agent. Run `openmausbot help <command>` for details; the full docs are [upstream](https://github.com/milind-soni/OpenMausBot/blob/main/docs/headless-cli.md).
+The common jobs, from setting up a server to giving bots work and changing the team, can be done with the `openmausbot` CLI, which is what you hand to an AI agent. Run `openmausbot help <command>` for details; the full docs are [upstream](https://github.com/milind-soni/OpenMausBot/blob/main/docs/headless-cli.md).
 
 ## Server
 
@@ -22,9 +22,9 @@ Almost anything the settings screens do, the `openmausbot` CLI does too, and it'
 
 | Command | What it does |
 |---|---|
-| `openmausbot pair --label "device"` | One-time pairing code (5 minutes); add `--public-url https://…` for a full link |
+| `openmausbot pair --label "device"` | One-time pairing code (10 minutes); add `--public-url https://…` for a full link |
 | `openmausbot connect <URL> --code <code> --out <file>` | Gets an access token from another machine |
-| `openmausbot sessions` | Lists paired devices and sessions |
+| `openmausbot devices` | Lists paired devices; `devices revoke <ID>` signs one out |
 | `openmausbot token create "name" --expires 90d --out <file>` | A token for scripts or CI that ends on its date; `token list`, `token revoke` |
 
 ## Giving bots work
@@ -46,7 +46,7 @@ Long briefs: `--message-file brief.md`, or `-` to read stdin.
 | Command | What it does |
 |---|---|
 | `openmausbot team export --out team.yaml` | Writes your bots, rooms, models and permissions to a file |
-| `openmausbot team apply team.yaml --check` | Previews the changes without making them |
+| `openmausbot team apply team.yaml --dry-run` | Previews the changes without making them; `--check` exits 6 when there are changes, for CI |
 | `openmausbot team apply team.yaml` | Makes the workspace match the file |
 | `openmausbot models` | Models each engine offers |
 | `openmausbot channels` | Your rooms |
@@ -54,7 +54,7 @@ Long briefs: `--message-file brief.md`, or `-` to read stdin.
 | `openmausbot engine set <engine> --key-env <ENV_VAR>` | Gives an engine an API key without a screen; `--rotate` replaces one it already has |
 | `openmausbot engine list` | The engines and whether each has a key |
 
-`engine set` takes `claude`, `openai`, `openrouter`, `openai-compatible` (with `--base-url`), `xai`, `groq`, `greenference`, `mistral` or `cerebras`. A key written on the command line is never printed back.
+`engine set` takes `claude`, `openai`, `openrouter`, `openai-compatible` (with `--base-url`), `xai`, `groq`, `greenference`, `modelgo`, `mistral` or `cerebras`. The key comes from an environment variable (`--key-env`) or a file (`--key-file`) and is never printed back.
 
 ## For scripts and other agents
 

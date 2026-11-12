@@ -1,7 +1,7 @@
 ---
 title: How to upgrade, back up and roll back safely
-description: Upgrade a self-hosted OpenMausBot safely. Back up, pin the version, verify, and roll back with one command if something breaks.
-verifiedOn: 0.1.146
+description: Upgrade a self-hosted OpenMausBot safely. Back up, pin the version, verify, and roll back if something breaks.
+verifiedOn: 0.1.152
 sidebar:
   order: 5
   label: Upgrade and roll back
@@ -9,7 +9,7 @@ sidebar:
 
 import Figure from '../../../components/Figure.astro';
 
-OpenMausBot releases almost every day. You don't need every release. Upgrade when a release fixes something you hit
+OpenMausBot releases almost every day (by npm publish time, 16 releases from November 2 to 11, 2026, UTC: 0.1.138 to 0.1.153). You don't need every release. Upgrade when a release fixes something you hit
 or adds something you want.
 
 <Figure name="upgrade" alt="Retro mountaineering poster: a robot steps up to a higher ledge, tied by an orange rope to an anchor on the ledge below, where its backpack is clipped safely." />
@@ -23,9 +23,12 @@ Below, `myserver` is the server's SSH alias and anything in `<…>` is a value y
 ## Decisions
 
 - Pin versions. Install a specific version, never "latest". That makes going back to an older version easy.
-- Back up first. Your bots, conversations and memory live in `~/.openmausbot`. Engine sign-ins live in each
-  CLI's own folder (such as `~/.codex` or `~/.claude`) and are not touched by an upgrade. The backup skips the
-  re-downloadable `tools` folder and stays small (ours is about 37 MB).
+- Back up first. Your bots, conversations and memory live in `~/.openmausbot` by default (or the folder the service names with `--data-dir` or `OMB_DATA_DIR`). That folder can be large, so check its size before you choose how to back it up; its `tools` folder holds
+  the engines and browser OpenMausBot downloaded; to save space you can leave it out, but check what else is in it first, and if a restore doesn't keep the existing `tools`, reinstall the tools you need. In the advanced interface you can
+  also use **Settings → Backups → Export full backup** for a password-protected backup (at least 12 characters);
+  saved account credentials and connections, sign-ins to other AI apps and remote desktop disks are not in it. Before exporting, wait for bots, approvals, sign-ins and computer actions to finish, and stop external editors and managed desktops that write workspace files. Restore it with **Import backup** on the same page by following its prompts. It replaces the workspace data rather than merging it. Engine sign-ins live by default in each CLI's own place (such as `~/.codex`, `~/.claude` or `~/.claude.json`),
+  outside that folder, so back them up separately if you want them; if you moved their home or data folders, go by
+  where they really are.
 
 ## Hand this to your agent
 
@@ -34,9 +37,15 @@ Check whether my OpenMausBot server (ssh alias "myserver") should be upgraded, a
 
 1. Show the installed version and the latest release on npm. Summarize the GitHub release notes in between,
    highlighting anything about the engines and features I use (ask me if unsure).
-2. Wait for my go-ahead. Then back up ~/.openmausbot to ~/omb-backup-<date>.tgz, excluding the tools folder.
-3. `npm install --global --prefix "$HOME/.local" openmausbot@<new version>`, restart the service, and wait until
-   it is active and /api/health answers.
+2. Wait for my go-ahead. Find the data folder the service actually uses (~/.openmausbot by default) and tell me how big it is and how much disk is free, then stop the openmausbot
+   service and any engine processes or managed desktops still writing to that folder (the database has to be
+   copied while nothing writes to it), and back it up, excluding the tools folder (list what's in it for me to confirm first). The backup holds credentials and
+   paired sessions: set umask 077, create a new empty folder only I can read, write the archive there, and never
+   overwrite an existing backup. Also check which of ~/.codex,
+   ~/.claude, ~/.claude.json, ~/.agent-browser and workspaces outside that folder exist, and ask me whether to back
+   them up too.
+3. Once the backup succeeded, as the account that runs the openmausbot service, `npm install --global --prefix "$HOME/.local" openmausbot@<new version>`; check the
+   install succeeded, then start the service and wait until it is active and /api/health answers.
 4. Verify: `openmausbot doctor`, number of bots unchanged, paired sessions still listed, my main engine's model
    list loads, remote access URL still returns 200.
 5. Give me the exact rollback command for the previous version.
@@ -51,13 +60,11 @@ Refresh any open browser or phone page so it loads the new version, then send an
 If something goes wrong, send this to your AI agent:
 
 ```text title="Prompt"
-Roll my OpenMausBot server (ssh alias "myserver") back to <previous version>: reinstall that version with npm to ~/.local, restart the openmausbot service, and tell me the result once the service is active.
+Roll my OpenMausBot server (ssh alias "myserver") back to <previous version>: stop the openmausbot service and any engine processes or managed desktops still writing to the data folder, reinstall that version with npm into ~/.local of the account that runs the service, check the install succeeded, then fully replace the data folder I confirmed before upgrading with the archive made then: move everything in it except the tools folder aside, extract the archive, original path, same ownership, start the service, and tell me the result once the service is active.
 ```
 
-Data does not need restoring for a normal rollback. The backup is for when something went really wrong.
+Restoring the pre-upgrade data along with the old version means the old version reads data it wrote itself. The cost: conversations and changes made after the upgrade are lost. The archive has no `tools` folder, so keep the existing one; if it's gone, reinstall those tools.
 
-## A real upgrade
+## Read the release notes first
 
-Our upgrade from 0.1.143 to 0.1.146 kept every bot and paired device, and it fixed a bug
-we had worked around by hand: OpenCode models not showing up until a background service was restarted. Reading the
-release notes first is how we found that out.
+For example, 0.1.145 fixed this: new OpenCode models didn't show up in the list, and Refresh didn't help (OpenCode 2.2.5, which the app installed then, rejects the old refresh command). Since then the running server checks periodically and reads the model list again once the last read is more than three hours old, and Refresh now uses a method OpenCode 2 accepts. When a problem is holding you up, check whether a newer version already fixed it.

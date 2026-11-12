@@ -25,7 +25,7 @@ Below, `myserver` is the server's SSH alias and anything in `<…>` is a value y
 | | Tailscale (`--tailscale`) | OpenMausBot tunnel (`--tunnel`) | Your own domain (`--domain` or `--public-url`) |
 |---|---|---|---|
 | Who can reach it | Only your devices on your tailnet | Anyone with a pairing code | Anyone with a pairing code |
-| Needs | Tailscale on server and devices | An OpenMausBot account (email code) | A domain on Cloudflare |
+| Needs | Tailscale on server and devices | An OpenMausBot account (email code) | `--domain`: the domain pointing at this machine, ports 80 and 443 open; `--public-url`: HTTPS already in front (cloudflared, Caddy, nginx…) |
 | Phone needs an app | Tailscale | No | No |
 | Best for | **Privacy** | Fastest public setup | Public address you control |
 
@@ -43,7 +43,7 @@ On my OpenMausBot server (ssh alias "myserver"), switch remote access from an SS
    without root, then `openmausbot service install --tailscale` and run the commands it prints to reload and restart the service.
 3. Verify from this computer: https://<name>.<tailnet>.ts.net/api/health returns {"app":"openmausbot"...}.
 4. Create pairing links with `openmausbot pair --label "<device>" --public-url https://<name>.<tailnet>.ts.net`,
-   one for this computer and one for my phone, and give them to me one at a time (they last 5 minutes).
+   one for this computer and one for my phone, and give them to me one at a time (they last 10 minutes).
 5. Stop the old SSH tunnel process on this computer.
 
 Do not change the server's DNS, routes or exit node.
@@ -55,8 +55,7 @@ Do not change the server's DNS, routes or exit node.
 2. In the Tailscale admin console: **DNS → HTTPS Certificates → Enable** (OpenMausBot needs a certificate), and
    on the machine, **Disable key expiry** (otherwise it drops off after 180 days).
 3. **Install Tailscale on your phone** and sign in to the same account.
-4. **Open each pairing link** on its device. In the desktop app, use **Server → Add Server from Copied Pairing
-   Link…** and paste the link. Don't choose **Make &lt;server&gt; my home** unless you mean to move all your bots there.
+4. **Open each pairing link** on its device. In the desktop app, use **Server → Add Server from Copied Pairing Link…** and paste the link. Don't choose **Make &lt;server&gt; my home** unless you mean to move all your bots there.
 
 ## Check it worked
 
@@ -71,12 +70,5 @@ the web app has no push notifications, and the iOS app alerts only while open or
 
 - **The service crash-looped right after switching.** The log said `Tailscale refused: on Linux run sudo tailscale
   set --operator=$USER once`. That's step 2 of the prompt.
-- **The phone loaded the page but got stuck on "connecting".** On mobile data, Tailscale could not open a direct
-  path and fell back to a relay (DERP) with much higher round-trip times. Static files arrived. The live event stream did
-  not keep up. `tailscale ping <phone>` showing `via DERP` means the connection is going
-  through the relay. Common causes are carrier NAT on the phone
-  or network rules that stop Tailscale from finding a direct route.
-- **A Cloudflare Tunnel may not work behind a proxy.** `cloudflared` can fail with `TLS handshake with edge error:
-  EOF` when a proxy interferes with the tunnel connection. In that case, let Tailscale's UDP traffic bypass the proxy.
-  Only do that if you understand your network rules: a too-broad rule can change how your other traffic is routed.
-- **Add it to the home screen from Safari (iPhone) or Chrome (Android).** Use the system browser, not an app's built-in one.
+- **The phone loads the page but stays on "connecting".** On mobile data, if Tailscale can't open a direct path it falls back to a relay (DERP). Relays are slower than direct connections, so the page loads but the live event stream may not keep up. Run `tailscale status` on the server: if the phone's line shows `relay "…"`, the connection is relayed. Hard NAT and firewalls are common reasons a direct path fails.
+- **To open it like an app on your phone:** on iPhone, add the page to the Home Screen from Safari; on Android, open Chrome's menu and choose Install.

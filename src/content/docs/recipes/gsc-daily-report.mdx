@@ -1,7 +1,7 @@
 ---
 title: A daily Search Console report built by a bot
 description: Merge Search Console data from several Google accounts into one daily report in your team chat, built by an OpenMausBot bot.
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 3
   label: Daily Search Console report
@@ -15,19 +15,19 @@ Every morning at 9 a report appears in our team chat: a one-line verdict, three 
 
 ![GSC daily report: verdict, clicks/impressions/CTR, 30-day trend, clicks per site, three things to check today](../../../assets/recipes/gsc-daily-report.png)
 
-We use this bot every day. It covers all the Search Console properties across several Google accounts. The bot built it in about 3 hours of conversation, and the hands-on part is just the three steps below.
+We use this bot every day. It covers all the Search Console properties across several Google accounts. From the first request to a fixed layout and a daily schedule took under 3 hours of conversation, and the first on-time report arrived the next morning. Your hands-on part is a few settings in Google Cloud, one consent per account and a bot in the Feishu group; the bot sends you the link and what to fill in for each step.
 
 ## How it works
 
-<Diagram name="gsc-pipeline" alt="A routine wakes the bot at 9:00 every day. Search Console data from several Google accounts syncs into a local SQLite database, the report is built from it and sent to a Feishu group through a custom bot webhook; if delivery fails, the bot explains why in chat." />
+<Diagram name="gsc-pipeline" alt="A routine wakes the bot at 9:00 every day. Search Console data from several Google accounts syncs into a local database, the report is built from it and sent to a Feishu group through a custom bot webhook; if delivery fails, the bot explains why in chat." />
 
-An OpenMausBot routine wakes the bot at `0 9 * * *` and it runs the script it wrote. The script does the heavy lifting. The model only orchestrates, handles errors and explains them. A real run: 19 steps, under 3 minutes, about 488 k input tokens, 94% of them cache hits. If a delivery fails, the bot leaves the reason in its chat instead of silently skipping a day.
+An OpenMausBot routine wakes the bot at `0 9 * * *` (Asia/Shanghai time zone) and it runs the script it wrote. The script does the heavy lifting. The model only orchestrates, handles errors and explains them. A real run: 19 steps, under 3 minutes, about 488 k input tokens, 94% of them cache hits. If a delivery fails, the bot leaves the reason in its chat instead of silently skipping a day.
 
 ## You need
 
 - An [always-on OpenMausBot](/guides/home-server/) (routines don't run while a Mac sleeps).
 - A bot on a cheap, fast model (we use DeepSeek V4.1 Flash on OpenCode Go).
-- Your Google account(s) and a group chat with incoming webhooks (we use Feishu; Slack, Teams, Telegram, WeCom and DingTalk work the same way).
+- Your Google account(s) and a group chat that accepts webhooks (we use Feishu; Slack and WeCom group bots work the same way).
 
 ## What to tell the bot
 
@@ -54,11 +54,20 @@ Show me the report on demo data first; connect real data after I approve the for
 
 <Steps>
 
-1. **Consent once per Google account.** The bot sends a Google sign-in link. Sign in with that account, approve, and paste the redirect URL from the address bar back to it.
+1. **Create a Google Cloud project and enable the Search Console API.** Create a project, open the Search Console API page and click Enable.
 
-2. **Add an incoming webhook to the group.** In Feishu: group settings → Bots → Add bot → **Custom bot**, name it, choose **custom keyword** security with `GSC` (always in the report title), and copy the webhook URL.
+2. **Set up the OAuth client.** In Google Auth Platform:
+   - Branding: app name, support email, audience **External**. To publish, the same page also needs an app home page, a privacy policy link and an authorized domain, or the publish button stays gray.
+   - Data access: add only the `https://www.googleapis.com/auth/webmasters.readonly` scope. More scopes trigger Google's sensitive-scope review.
+   - Clients: type **Desktop app**. Download the JSON and send it to the bot.
 
-3. **Paste the webhook into the bot's secret card**, not the chat. Secret cards hand the value to the bot's process without it ever appearing in the transcript.
+3. **Publish the app to production.** Under Audience, click Publish app. Otherwise refresh tokens expire after 7 days. If sign-in shows an "unverified app" warning, choose Advanced → Continue for personal use.
+
+4. **Consent once per Google account.** The bot sends a sign-in link. Sign in with that account and approve. The browser lands on a `localhost` page that doesn't load; copy the whole address from the address bar back to the bot. Repeat per account.
+
+5. **Add a custom bot to the group.** In Feishu: **···** at the top right of the group → Settings → Bots → Add bot → **Custom bot**, name it, choose **custom keyword** security with `GSC` (always in the report title), and copy the webhook URL.
+
+6. **Paste the webhook into the bot's secret card**, not the chat. Secret cards hand the value to the bot's process without it ever appearing in the transcript.
 
 </Steps>
 
@@ -68,21 +77,23 @@ Show me the report on demo data first; connect real data after I approve the for
 |---|---|---|
 | Reading several Google accounts | **OAuth per account** | The bot first proposed a service account, which has to be added to every property by hand. With OAuth, each account consents once and new sites appear automatically |
 | Will the token expire in 7 days? | **Publish the OAuth app to production** in Google Cloud | Refresh tokens of apps in testing expire after 7 days and the report silently stops |
-| Which chat bot type | **Incoming webhook (custom bot)** | In Feishu, a group with external members only accepts custom bots, not app bots |
+| Which chat bot type | **Webhook (custom bot)** | A Feishu group with external members is an external group. App bots without the external-sharing capability can't join it; custom bots can |
 | Layout | Verdict → three numbers → trend → collapsed details | The report's job is to tell you in five seconds whether today needs attention |
 | Dates | Treat data as 2 days late | Search Console lags; counting "today" always undercounts |
 
 :::caution[Feishu external groups]
-External groups accept only custom (webhook) bots. App bots fail with `232033`. Inviting an external member into an internal group creates a new external group without the bot. Renaming or disbanding an external group is client-only. The API refuses.
+- An app without the external-sharing capability gets `232033` when it calls the API on an external group (rename, add members, disband). Feishu's explanation: only bots with external sharing capabilities support external groups.
+- When we used Invite members to bring an external contact into an internal group, Feishu created a new group, and the bot in the old group did not come along. We ended up adding a custom bot to the new external group.
+- For such an app, renaming or disbanding an external group stays client-only even with group-management permissions granted.
 :::
 
 ## Have the bot save what it learned
 
-Afterwards, the bot saved the whole procedure and its pitfalls as a reusable skill. The next time you ask for "a daily push to some group", it follows that path directly. When something works, say "save how we did this as a skill".
+While building it, the bot wrote the whole procedure and its pitfalls into its memory. The next time you ask it for a daily push to some group, it follows that record. To let other bots use the same approach, say "save how we did this as a skill".
 
 ## Make it yours
 
-- **Another chat app:** swap the webhook for Slack, Telegram, Teams, WeCom or DingTalk.
+- **Another chat app:** Slack and WeCom group bots also take webhooks, so only the sending step changes. Telegram has no group webhook; send through a bot token instead.
 - **One site at a time:** add a site filter and send a separate report for each site.
 
 ## Next steps

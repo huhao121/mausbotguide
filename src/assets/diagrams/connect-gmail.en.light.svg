@@ -42,8 +42,8 @@
   <text x="380" y="576" fill="var(--text-muted)" font-size="12" text-anchor="middle">only you can do this</text>
 
   <rect x="270" y="620" width="220" height="60" rx="8" fill="var(--color-secondary-fill)" stroke="var(--color-secondary-stroke)" stroke-width="1.5"/>
-  <text x="380" y="646" fill="var(--text)" font-size="14" font-weight="600" text-anchor="middle">Limit tools per bot</text>
-  <text x="380" y="666" fill="var(--text-muted)" font-size="12" text-anchor="middle">Bot settings → Access</text>
+  <text x="380" y="646" fill="var(--text)" font-size="14" font-weight="600" text-anchor="middle">Choose what each bot may use</text>
+  <text x="380" y="666" fill="var(--text-muted)" font-size="12" text-anchor="middle">Apps it can use · Advanced: Access</text>
 
   <rect x="260" y="710" width="240" height="60" rx="8" fill="var(--color-secondary-fill)" stroke="var(--color-secondary-stroke)" stroke-width="1.5"/>
   <text x="380" y="736" fill="var(--text)" font-size="14" font-weight="600" text-anchor="middle">Ask for three unread emails</text>

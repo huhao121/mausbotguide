@@ -29,12 +29,12 @@ Ranked by how well sign-in works on a machine without a screen:
 
 | Engine | How it signs in | Headless | You need |
 |---|---|---|---|
-| **OpenCode** | API key, or copy your existing login | ★★★ | OpenCode Go/Zen, or nothing (free models) |
+| **OpenCode** | API key (copy it from the opencode.ai console, paste it with `opencode auth login` on the server) | ★★★ | OpenCode Go/Zen, or nothing (free models) |
 | **Codex** | Device code (enter a code on a web page) | ★★★ | ChatGPT subscription |
-| **Kimi** | Device code | ★★★ | Kimi account |
+| **Kimi** | Device code | ★★★ | Kimi Code membership |
 | **DeepSeek Harness** | API key | ★★★ | DeepSeek API key (pay as you go) |
-| **Claude Code** | Open a link, paste the code back | ★★ | Claude Pro/Max account |
-| **Antigravity (Gemini)** | Browser sign-in, paste the callback URL back | ★ | Google AI Pro/Ultra |
+| **Claude Code** | Open the sign-in page, paste back the code it shows | ★★ | A paid Claude plan such as Pro or Max |
+| **Antigravity (Gemini)** | Sign in to Google in a browser, paste back the address of the page it redirects to | ★ | A Google account |
 
 Get one easy engine working first (OpenCode or Codex), prove the whole chain with a real
 message, then add the fussy ones.
@@ -48,9 +48,7 @@ OpenCode also has free anonymous models. They are good for testing the pipeline,
 ```text title="Prompt"
 On my OpenMausBot server (ssh alias "myserver"), get engines signed in. I want: <engines, e.g. OpenCode Go and Codex>.
 
-- For engines I am already signed into on THIS computer (check: opencode auth list, codex login status,
-  claude auth status), move the credential to the server through a pipe so it is never printed or stored
-  in the chat. For OpenCode: `opencode auth export | ssh myserver '<server opencode path> auth import'`.
+- OpenCode needs an API key: let me `ssh myserver` and run `opencode auth login` myself, choose OpenCode Go and paste the key. Don't handle the key.
 - For device-code engines, start the sign-in on the server and give me only the URL and code to enter.
 - After each engine: run `openmausbot models` on the server and confirm its models are listed. Then run
   `openmausbot run "MausBot" "Reply with exactly: OK"` on a model from that engine.
@@ -61,8 +59,8 @@ Never echo API keys, tokens, or auth files. If a sign-in needs a browser step, s
 
 ## Only you can do this
 
-- **Approve each sign-in in your browser:** enter the device code (Codex, Kimi), or open the link and paste the code
-  back (Claude). Use the account that has the subscription. An API/Console account bills per token instead.
+- **Approve each sign-in in your browser:** enter the device code (Codex, Kimi), or open the sign-in page and paste back
+  the code it shows (Claude). Use the account that has the subscription. You can also do these from **Settings → AI**: click **Set up** on the engine and finish in your browser, no terminal needed.
 - Paste API keys into **Settings → AI → API keys** yourself, not into a chat with your agent. OpenMausBot stores them
   write-only and passes them only to the engine process.
 
@@ -74,15 +72,9 @@ Open **Settings → AI**. Each signed-in engine is listed under **Your AI** with
 
 ## Where it goes wrong
 
-- **Two providers, almost the same model names.** In OpenCode, `Go · DeepSeek V4.1 Flash` is your Go subscription.
-  `Zen · DeepSeek V4.1 Flash` bills your Zen balance per token. Pick by the prefix, not the name.
-- **Copied the OpenCode login, but only Zen models appeared.** OpenCode 2 runs a background service that had started
-  before the import and kept its old state. Restarting it fixed the list. Since OpenMausBot 0.1.145 the model list refreshes on its own.
-- **Claude said "try a different browser".** That message is generic. The sign-in link is long and expires. It fails
-  if it gets cut when copied, is used twice, or the browser is signed into a different Claude account. Start a fresh
-  sign-in, open the complete link, check which account is signed in, and paste the whole code (including any `#…`
-  part).
-- **Gemini answers "User location is not supported" on the server but works elsewhere.** The server may reach
-  Google by a different route from your other machines. Compare their DNS and outbound routes first, then fix the difference.
-- **Antigravity doesn't reuse your existing agy login.** OpenMausBot uses Google's official ACP runtime. Install
-  it from **Settings → AI** and sign in there. One instance per Google account is supported.
+- **Two providers, almost the same model names.** In OpenCode, `Go · DeepSeek V4.1 Flash 1017` is your Go subscription.
+  `Zen · DeepSeek V4.1 Flash 1017` bills your Zen balance by usage. Pick by the prefix, not the name.
+- **Claude sign-in fails.** In **Settings → AI**, click **Set up** on Claude again, open the complete sign-in page, check the
+  browser is signed into the Claude account you mean, and paste back the whole code it shows.
+- **Antigravity doesn't reuse your existing agy login.** OpenMausBot installs its own Antigravity runtime, separate from
+  the Antigravity app and the `agy` CLI. Install it from **Settings → AI** and sign in with Google there. Each setup has its own Google account.

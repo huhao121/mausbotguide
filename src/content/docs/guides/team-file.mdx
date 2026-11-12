@@ -1,7 +1,7 @@
 ---
 title: How to configure bots with a team file
 description: Split work across OpenMausBot bots with a team file, then drive them from the command line or from Claude Code via MCP.
-verifiedOn: 0.1.151
+verifiedOn: 0.1.152
 sidebar:
   order: 4
   label: Configure bots with a team file
@@ -10,8 +10,8 @@ sidebar:
 import Figure from '../../../components/Figure.astro';
 import Diagram from '../../../components/Diagram.astro';
 
-A bot that can do everything is slow at everything. Use a few bots instead, each with a narrow
-job and only the tools that job needs.
+A bot that can do everything carries every tool into every turn. Use a few bots instead, each with a narrow
+job and the model and computer that job needs.
 
 <Figure name="team-file" alt="A three-panel geometric poster: three identical robots, each with one tool only: a speech bubble, a mouse connected to a monitor, and a flashlight under a clock." />
 
@@ -26,12 +26,13 @@ Below, `myserver` is the server's SSH alias and anything in `<…>` is a value y
 
 | Bot | Model | Tools | Use it for |
 |---|---|---|---|
-| **Chat** | Fast and cheap, low effort | Shell and files only, **no computer** | Questions, writing, summaries. Replies in seconds. |
+| **Chat** | Fast and cheap, low effort | **No computer** | Questions, writing, summaries |
 | **Operator** | Strong | Browser + a computer (local VM) | Clicking through websites, screenshots, anything visual |
 | **Patrol** | Cheapest | Whatever the routine needs | Scheduled checks that report only when something changed |
 
-Why split: every tool a bot has is described in every prompt, and a bot with many tools has more ways to take a long
-detour. Keeping each bot to the tools its job needs keeps tasks short. See
+Why split: every tool a bot has is described in every prompt. A bot that doesn't need a computer shouldn't get one, and
+its prompt is shorter for it. To narrow tools further, use the `tools:` field in the table below; on engines like Claude
+and Codex it only limits MCP tools, and it isn't a file or shell sandbox. See
 [why one task can take an hour](/concepts/long-tasks/).
 
 ## Hand this to your agent
@@ -45,7 +46,7 @@ On my OpenMausBot server (ssh alias "myserver"), set up three bots with `openmau
 - "Operator": model <strong model>, computer: vm, approval: ask.
 - "Patrol": model <cheapest model>, computer: browser, approval: full (it runs unattended, so nobody is there to answer a card).
 
-First export the current team to a file and show me the diff before applying (team apply --check).
+First export the current team to a file and show me what would change before applying (team apply --dry-run).
 Then create a routine for Patrol: every weekday at 09:00 my time, check <what to check> and post a short summary only
 if something changed. Finally prove each bot works with `openmausbot run "<bot>" "<small task>"` and show me
 the replies.
@@ -56,7 +57,8 @@ the replies.
 <Diagram name="team-file" alt="A team.yaml has three parts: defaults that every bot uses unless it sets its own, bots with one entry each covering model, approval, computer and standing instructions, and rooms with members and a shared brief." />
 
 A team file describes the whole workspace: bots, their models, approval levels and computers, their standing
-instructions, rooms, and the engines they use. A complete, realistic example:
+instructions, rooms, and the engines they use. A complete example; swap in models, folders and skill files that
+really exist on your server:
 
 ```yaml title="team.yaml"
 version: 1
@@ -75,9 +77,9 @@ teams:
 bots:                         # at least one
   - name: Chat
     team: Content
-    model: claude/claude-sonnet-5         # INSTANCE/MODEL, exactly as `openmausbot models` prints it
+    model: claude/claude-sonnet-5         # INSTANCE/MODEL, one that `openmausbot models` lists
     effort: low                           # none | low | medium | high | xhigh | max
-    approval: full
+    approval: ask
     computer: off
     soul: |                               # standing instructions: sent with every turn
       You handle everyday questions and writing. Answer briefly, conclusion first.
@@ -120,10 +122,10 @@ A few fields the example doesn't explain:
 |---|---|
 | `engines:` | Optional, and needs full access. Keys must be `{ env: NAME }` or `{ file: PATH }`; a key written into the file is refused |
 | `defaults:` | Applies to every bot that doesn't set the field itself |
-| `approval:` | A new bot starts at `full`. Unattended bots need it; see [approval levels](/concepts/approval-levels/) |
+| `approval:` | A new bot starts at `full` (a hosted company workspace starts at `ask`). For unattended bots, see [approval levels](/concepts/approval-levels/) |
 | `cwd:` | Must be a full path that exists on the server; `~` is refused because it may mean something else there |
 | `soul:` | Standing instructions, at most 24,000 bytes; `{ file: PATH }` keeps them in a file instead |
-| `tools:` | `{ allow: [...] }` or `{ deny: [...] }` narrows what the bot can use; leave it out and it gets everything |
+| `tools:` | `{ allow: [...] }` or `{ deny: [...] }` narrows what the bot can use; `{}` means every tool, and leaving it out keeps what the bot has. Claude, Codex and similar engines can only limit MCP tools (`mcp:SERVER:TOOL`) |
 | `prune: true` (on a team) | Only a team marked this way lets `--prune` delete bots and rooms the file no longer lists |
 
 When you apply a team file:
@@ -145,10 +147,10 @@ Then have "<bot name>" do one small job: <task>. Wait for it to finish and show 
 ## Habits that keep it fast and safe
 
 - One job, one conversation. Start a new conversation per task.
-- Set approvals deliberately. Every new bot, from the app or a team file, starts at `full` (Full access), so
-  write `approval:` for each bot. Bots that run routines need `full`, or they wait on a card nobody answers. Use `ask`
+- Set approvals deliberately. Every new bot, from the app or a team file, starts at `full` (Just do it in the app; a hosted company workspace starts at `ask`), so
+  write `approval:` for each bot. A routine bot at `ask` stops at any action that needs approval and waits on a card nobody answers, or stops when the wait times out; give `full` to the ones that can't reach anything sensitive. Use `ask`
   for bots whose actions you want to check. `edits` exists only on engines that offer it (Claude, Antigravity, Grok),
   not on OpenCode or Codex. On a Mac home, bots run as you, so be stricter there.
-- **Connected apps are greyed out on a self-hosted server** until you add a **Composio project key** (**Settings → AI → API keys → Self-host connected apps**). Before that, a CLI is often simpler: install `gh` on the server and sign in with a device code, and bots
+- On a self-hosted server with no key, Connected apps says "Connected apps are not set up yet" until you add a **Composio project key** (**Settings → AI → API keys → Apps and tools**). Before that, a CLI is often simpler: install `gh` on the server and sign in once with a one-time code in your browser, and bots
   can use GitHub immediately. Note that a self-hosted Composio key can call app tools but cannot watch for app events
   yet. Use webhooks for "when X happens".
