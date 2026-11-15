@@ -1,0 +1,185 @@
+---
+title: "Three bots, one job: a Chief, a researcher and an editor"
+description: One bot takes the request, a researcher returns a table, an editor writes the file, and the Chief checks it before it reports back.
+verifiedOn: 0.1.154
+sidebar:
+  order: 7
+  label: Three-bot relay
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Figure from '../../../components/Figure.astro';
+import Diagram from '../../../components/Diagram.astro';
+
+A bot that does everything ends up with two problems: its instructions keep growing, and so does its access. Split the work into three jobs, give each one its own instructions and folder, and you know where to look when something goes wrong. A working folder decides where a bot works. It is not a permission boundary.
+
+This page builds a three-bot team: a Chief of Staff takes the request, a researcher returns the points, an editor writes the file. The goal is a `roles.md` written by the editor, plus a relay record you can read line by line.
+
+You need a working OpenMausBot (this page was verified on 0.1.154), one engine that really runs, and three folders for the bots' working folders. Below, `<team file>` is the YAML in this page, `<shared folder>` is the folder all three bots may write to, and `<output folder>` is an empty folder for the run's export.
+
+<Figure name="three-bot-team" alt="Paper-cut collage: three small white robots behind a long desk. The left one holds a stack of papers, the middle one passes a single sheet to the right, and the right one is writing on it. A stamp tray sits at the corner of the desk." />
+
+## How one job travels
+
+<Diagram name="three-bot-handoff" alt="Relay order: you ask the Chief of Staff for one thing, it sends the points task to the researcher, the researcher returns a table, the Chief passes the table and the file path to the editor, the editor writes roles.md, and only after reading the file does the Chief reply to you." />
+
+In a good run, you talk only to the Chief. It splits the request, sends the points to the researcher, takes the table back, and passes it to the editor with a file path. The editor writes the file. The Chief reads it, checks the path and the content, and then replies in a few lines.
+
+The researcher's part and the editor's part run in order. Before the table exists, the editor has nothing to write from.
+
+## Who does what
+
+| Bot | Owns | Does not own | Hands over |
+|---|---|---|---|
+| Chief | Splitting the request, handing out work, checking it, reporting | Looking things up, writing long text | A brief for each specialist, a short report for you |
+| Researcher | Points, evidence, confidence | Finished prose, polishing | A table with a source on every row |
+| Editor | Writing the file from the table | Adding facts, changing conclusions | The file at a path, plus a line naming its source |
+
+Write three things in each instruction: what it owns, what it does not own, and what it hands over. The third one matters most. Once the handover has a fixed shape, the next bot can pick it up.
+
+For the researcher, that shape can be three columns: point, evidence, confidence. For the editor, it is a path and a character count. For the Chief, it is a report of six lines or fewer. None of this needs a long document.
+
+## Set it up
+
+All three jobs live in one team file:
+
+```yaml title="team.yaml"
+version: 1
+defaults:
+  approval: full   # unattended: nobody answers a card
+  computer: off
+  browser: false
+teams:
+  - name: Demo Lab
+    brief: |
+      Three jobs: the Chief takes the request and checks the result, the researcher
+      supplies points, the editor writes the file. Every output goes to <shared folder>.
+      Team rule: nothing is sent outside, no software is installed.
+bots:
+  - name: Alder
+    team: Demo Lab
+    chief: true
+    title: Chief of Staff
+    model: <INSTANCE>/<MODEL>
+    cwd: <shared folder>
+    soul: { file: souls/alder.md }
+  - name: Sorrel
+    team: Demo Lab
+    title: Researcher
+    model: <INSTANCE>/<MODEL>
+    cwd: <research folder>
+    soul: { file: souls/sorrel.md }
+  - name: Larch
+    team: Demo Lab
+    title: Editor
+    model: <INSTANCE>/<MODEL>
+    cwd: <edit folder>
+    soul: { file: souls/larch.md }
+```
+
+The example uses Alder, Sorrel, Larch and Demo Lab; use your own names. Below, the roles are called the Chief, the researcher and the editor.
+
+In one demo run, the editor wrote `roles.md`. The example below is cleaned up from that run, not a byte-for-byte replay. This is a sample configuration, not a guarantee that it runs unchanged; adjust it to your engine and folders first.
+
+The example uses **Full access** because an unattended run has nobody to answer an approval card. It does more than skip approvals: the provider's own permissive mode, configuration changes, and some sends through connected apps may also go ahead without asking. The team brief's "nothing is sent outside, no software is installed" is an instruction, not a technical boundary. Real questions and missing credentials still wait for you. With `ask`, `run` stops waiting and returns exit code 3 when the engine asks something only a person can answer. The first output includes the thread ID and start time; after you answer the card in the app, use `wait --thread <ID> --since <MS>` to resume that same job. After the first good run, tighten the level as below. Check all three bots and their existing threads. Choosing a level in bot settings can apply it to that bot's existing threads. The Chief's level flows down to the receiving bot, but it only raises that bot's level. If the Chief is on ask, nothing is passed down, so setting the Chief to ask does not lower the specialists.
+
+Hand this file and the prompt below to your AI agent. It writes the three instruction files, previews the plan, and creates the bots. Put a model your engine really lists in `model`, written as instance/model. The instance name ends at the first slash, so a model name that contains a slash is fine.
+
+```text title="Prompt for your agent"
+Build a three-bot team in my workspace from the team file I gave you: Alder as the Chief, Sorrel as the researcher, Larch as the editor. Only add things. Do not change or delete any bot that already exists.
+
+First run `openmausbot models` to list engines and models. The run test at the end is what proves one works.
+
+Then:
+1. Run `openmausbot team export --out backup.yaml` to export the current team configuration: engine keys are exported as placeholders, and Custom approval is skipped. This is not a full backup; inspect and store the exported file carefully. If the workspace has no bots yet, skip this step.
+2. Make sure <shared folder>, <research folder> and <edit folder> exist, and put those paths in the team file.
+3. Write the three instruction files, at most 30 lines each, and include what each bot does not own and the fixed shape of its handover.
+
+The instructions:
+- Chief: split the request, hand out work, check the result, report in six lines or fewer. It is the only bot that talks to me.
+- Researcher: return a three-column table of point, evidence and confidence. No finished prose, no unrelated research.
+- Editor: write the file from the table, add no facts, and reply with the full path, the character count and one line naming its source.
+
+After that:
+1. Run `openmausbot team apply <team file> --dry-run` and show me the plan.
+2. After I confirm, run `openmausbot team apply <team file>`.
+3. Run it once more. It should print `No changes.`
+4. Check that the Chief can answer at all with `openmausbot run "Alder" "Describe your role in one sentence" --timeout 10m`. If it cannot run, stop and tell me which step failed.
+
+Rules:
+- Never print a key, token or password in the chat, a file or a log.
+- Back up before changing any configuration. Ask me before changing DNS, routing or time zone.
+- If an engine is signed out, out of credit, or the model does not exist, stop and tell me. Do not silently switch models.
+```
+
+## Give it one job
+
+With the team in place, hand the Chief a job that needs all three. Name the file, the length and the order, or it has to guess.
+
+```text title="Request for the bot"
+Write a team handbook for Demo Lab as roles.md in <shared folder>, 400 to 600 characters.
+
+Order: first ask the researcher for a table of the three roles, covering what each one owns, what it does not own, and what it hands over. Then give that table to the editor to write the file.
+
+Last, check that the file exists and says what it should, and reply to me in six lines or fewer.
+```
+
+When you send this from the command line, give `run` `--export <output folder>` and use a new, empty folder. The export is this relay job, and its `job.json` is what the checks below read.
+
+Three constraints do the work here. The table comes first, so the editor has something to write from. The path and the length are fixed, so the Chief has something to check. The reply has a limit, so you do not have to read a page.
+
+## Only you can do this
+
+<Steps>
+
+1. Pick an engine that really runs. Change the model, or sign in the way that engine expects, until one bot can answer one line. Having the CLI installed does not mean it can run. Sign-in is a separate check.
+
+2. Create the three folders and note their paths. `cwd` in the team file must be a full path that already exists on the server, and `~` is refused.
+
+3. Read the dry-run plan. It should only create things, with no update or delete. If a name matches a bot you already have, the new bot is merged into it by name, and this is where you see that.
+
+</Steps>
+
+## The decisions that made it work
+
+| Decision | Recommendation | Why |
+|---|---|---|
+| Do you need a Chief | Yes, once you have more than two bots | One way out, so three reports do not arrive at once |
+| Which approval level | Full access for an unattended run, ask when someone is watching | A request only a person can answer makes the run stop waiting and return exit code 3 by default. With ask, approvals also come to you |
+| One model for all three | Strong model for the Chief, cheaper ones for the specialists | Judgement and checking need quality. Listing and drafting do not |
+| Do you need a group chat | Not at first | Direct hand-offs are enough for three jobs |
+| How to split folders | One shared folder, one per specialist | The shared folder is the delivery area. The specialist folders are drafts |
+
+## Check it worked
+
+Three checks, in this order.
+
+1. If neither the file nor the server settings changed, run the team file again. It prints `No changes.`, which means the settings the file lists are already in place and nothing is created twice.
+2. Open `<output folder>/job.json`. The node for each of the three roles is `completed`, and `roles.md` is in the shared folder. That is the main evidence that the relay finished. It proves the node status and that the file exists. Read the file to judge the content.
+3. To see the process, open the Chief's conversation in `<output folder>/transcripts/`, or the same conversation in the app. If the export is complete, it shows a hand-off to the researcher and a reply, then the same for the editor. An export can skip a conversation or truncate a message. A long message can be cut even when the manifest does not flag it. Check the manifest, then read the transcript. The exact wording varies with the interface language, so do not treat one fixed phrase as the only proof.
+
+## Where it goes wrong
+
+**Signed out.** In one run, a Claude reply said `Not logged in · Please run /login`. Sign in again the way Claude expects, or pick an engine that is already signed in. Available does not mean usable.
+
+**No credit.** In one run, an OpenCode Zen reply said `Your ... balance has run out`; other engines word it differently. A pay-as-you-go engine has no credit. Switch models or add credit.
+
+**Wrong folder path.** A path starting with `~` reports an error containing `cwd must be a full path (~ is not expanded the same way on the server)`. A relative path reports one containing `cwd must be an absolute path on the server`. Use a full path on the server.
+
+**Wrong model format.** The error is `must be INSTANCE/MODEL, such as claude/claude-sonnet-5-5`. Write instance/model. The instance ends at the first slash, and a slash inside the model name needs no escaping.
+
+**A field you changed by hand goes back after the next apply.** A field left out of the team file keeps its value, and a field written in the file wins. Treat the file as the only source, or stop editing the same field in the app.
+
+**Two bots in the same folder.** Let one bot write the shared folder at a time.
+
+## Make it yours
+
+- Two bots only: drop the editor, let the researcher return the table and the Chief write the file.
+- Run it daily: turn the request into a routine, write into the shared folder, and tell the bot to stay quiet when there is nothing new.
+- Add a third specialist: give it its own folder and a fixed handover before you put it in a group chat.
+
+## Next steps
+
+- [Configure bots with a team file](/guides/team-file/): every field, renaming with `was:`, and what `prune` can delete.
+- [Approval levels](/concepts/approval-levels/): what ask, edits, auto and full each stop.
+- [Make a bot work on a schedule](/guides/routines/): time zones, catch-up runs and retries.
