@@ -33,6 +33,8 @@ import Figure from '../../../../components/Figure.astro';
 - 在服务器上，每个引擎要登录一次。Codex 和 Kimi 用设备码（device code）登录最省事。OpenCode 在服务器上用 API key 登录，请参阅[如何在服务器上登录引擎](/zh/guides/sign-in-engines/)。
 - 任何 OpenAI 兼容接口（DeepSeek 官方 API、本地的 LM Studio）都可以在 **设置 → AI → API 密钥 → 你自己的模型服务器** 里添加为一个引擎，不用写代码。
 
+手头还没有订阅或没有外币卡的话，可以先按上面最后一条接一个 DeepSeek 官方 API 跑起来。想用订阅跑 Codex，它走的是你本人 ChatGPT 账户的方案限额，没有海外卡时可以用美区 App Store 礼品卡在手机端内购，或者在 [PayForGPT](https://payforgpt.com/codex?utm_source=mausbotguide&utm_medium=guide&utm_campaign=all_subs) 用支付宝给自己的账号开通（不需要提供账号密码）。
+
 接入后，打开任意对话顶部的模型选择器，就能看到这台机器现在能用哪些模型。
 
 ## 给 Bot 换模型
